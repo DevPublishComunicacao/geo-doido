@@ -9,31 +9,6 @@
 </head>
 <body>
   <div id="app">
-    <!-- Tela de Configuração -->
-    <div id="tela-config" class="hidden">
-      <div class="config-container">
-        <div class="logo">
-          <div class="logo-icon">🌍</div>
-          <h1>GeoDoido</h1>
-        </div>
-        <div class="config-box">
-          <h2>Configurar API Key</h2>
-          <p>Para usar o Street View (modo câmera), você precisa de uma chave da API do Google Maps.</p>
-          <ol class="config-passos">
-            <li>Acesse <a href="https://console.cloud.google.com/apis/credentials" target="_blank">console.cloud.google.com/apis/credentials</a></li>
-            <li>Crie um projeto e ative a <strong>Maps JavaScript API</strong></li>
-            <li>Crie uma chave de API (sem restrições para testes)</li>
-            <li>Cole a chave abaixo:</li>
-          </ol>
-          <div class="config-input-group">
-            <input type="text" id="input-api-key" placeholder="Cole sua chave da API aqui..." />
-            <button id="btn-salvar-key" class="btn-primary">Salvar</button>
-          </div>
-          <button id="btn-sem-streetview" class="btn-link">Continuar sem Street View (modo mapa)</button>
-        </div>
-      </div>
-    </div>
-
     <!-- Tela Inicial -->
     <div id="tela-inicial">
       <div class="logo">
@@ -56,7 +31,6 @@
           <span class="stat-label">Melhor Pontuação</span>
         </div>
       </div>
-      <button id="btn-config" class="btn-link config-link">Configurar API Key</button>
     </div>
 
     <!-- Tela de Configuração do Jogo -->

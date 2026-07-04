@@ -15,7 +15,6 @@ let configTempoRodada = 0;
 let configRolezinho = false;
 let timerInterval = null;
 let timerSegundos = 0;
-let modoMapaForcado = false;
 
 const pinSvg = (cor) => `
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
@@ -46,7 +45,7 @@ const iconPalpite = L.divIcon({
 function $(id) { return document.getElementById(id); }
 
 function mostrarTela(tela) {
-  ['tela-config', 'tela-inicial', 'tela-config-jogo', 'tela-jogo', 'tela-resultado'].forEach(t => {
+  ['tela-inicial', 'tela-config-jogo', 'tela-jogo', 'tela-resultado'].forEach(t => {
     const el = $(t);
     if (!el) return;
     if (t === tela) {
@@ -112,7 +111,6 @@ function carregarGoogleMaps(callback) {
 function iniciarJogoModoMapa(callback) {
   googleReady = false;
   usarGoogleMaps = false;
-  modoMapaForcado = true;
   if (callback) callback();
 }
 
@@ -584,11 +582,6 @@ function carregarStats() {
   } catch (e) {}
 }
 
-function verificarApiKey() {
-  const key = CONFIG.GOOGLE_MAPS_API_KEY;
-  return !!(key && key.length >= 10);
-}
-
 async function iniciarJogo() {
   limparCamadas();
   mostrarTela('tela-jogo');
@@ -618,11 +611,6 @@ function voltarMenu() {
 }
 
 function tentarIniciarJogo() {
-  if (!verificarApiKey()) {
-    mostrarTela('tela-config');
-    return;
-  }
-  modoMapaForcado = false;
   mostrarTela('tela-config-jogo');
   $('opcao-tempo').querySelector('[data-value="0"] input').checked = true;
   $('opcao-rolezinho').querySelector('[data-value="sim"] input').checked = true;
@@ -638,10 +626,6 @@ function lerConfigJogo() {
 
 function entrarJogo() {
   lerConfigJogo();
-  if (modoMapaForcado) {
-    iniciarJogo();
-    return;
-  }
   carregarGoogleMaps(() => {
     iniciarJogo();
   });
@@ -649,11 +633,6 @@ function entrarJogo() {
 
 document.addEventListener('DOMContentLoaded', () => {
   carregarStats();
-
-  const temKey = verificarApiKey();
-  if (!temKey) {
-    mostrarTela('tela-config');
-  }
 
   $('btn-jogar').addEventListener('click', tentarIniciarJogo);
 
@@ -675,30 +654,5 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-sair').addEventListener('click', voltarMenu);
   $('btn-jogar-novamente').addEventListener('click', tentarIniciarJogo);
   $('btn-voltar-menu').addEventListener('click', voltarMenu);
-  $('btn-config').addEventListener('click', () => {
-    mostrarTela('tela-config');
-  });
-
-  $('btn-salvar-key').addEventListener('click', () => {
-    const key = $('input-api-key').value.trim();
-    if (key.length < 10) {
-      alert('Chave inválida. Verifique se a chave está completa.');
-      return;
-    }
-    CONFIG.GOOGLE_MAPS_API_KEY = key;
-    mostrarTela('tela-inicial');
-  });
-
-  $('btn-sem-streetview').addEventListener('click', () => {
-    iniciarJogoModoMapa(() => {
-      mostrarTela('tela-config-jogo');
-      lerConfigJogo();
-    });
-  });
-
   $('btn-entrar-jogo').addEventListener('click', entrarJogo);
-
-  $('input-api-key').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') $('btn-salvar-key').click();
-  });
 });
