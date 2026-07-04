@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoDoido - Adivinhe a Localização!</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Tela de Configuração -->
+    <div id="tela-config" class="hidden">
+      <div class="config-container">
+        <div class="logo">
+          <div class="logo-icon">🌍</div>
+          <h1>GeoDoido</h1>
+        </div>
+        <div class="config-box">
+          <h2>Configurar API Key</h2>
+          <p>Para usar o Street View (modo câmera), você precisa de uma chave da API do Google Maps.</p>
+          <ol class="config-passos">
+            <li>Acesse <a href="https://console.cloud.google.com/apis/credentials" target="_blank">console.cloud.google.com/apis/credentials</a></li>
+            <li>Crie um projeto e ative a <strong>Maps JavaScript API</strong></li>
+            <li>Crie uma chave de API (sem restrições para testes)</li>
+            <li>Cole a chave abaixo:</li>
+          </ol>
+          <div class="config-input-group">
+            <input type="text" id="input-api-key" placeholder="Cole sua chave da API aqui..." />
+            <button id="btn-salvar-key" class="btn-primary">Salvar</button>
+          </div>
+          <button id="btn-sem-streetview" class="btn-link">Continuar sem Street View (modo mapa)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tela Inicial -->
+    <div id="tela-inicial">
+      <div class="logo">
+        <div class="logo-icon">🌍</div>
+        <h1>GeoDoido</h1>
+        <p class="subtitle">Adivinhe a localização no mapa!</p>
+        <p class="byline">by MegaBrain Força Total</p>
+      </div>
+      <div class="menu-principal">
+        <button id="btn-jogar" class="btn-primary">Jogar</button>
+        <button id="btn-instrucoes" class="btn-secondary">Como Jogar</button>
+      </div>
+      <div class="stats-globais">
+        <div class="stat-item">
+          <span class="stat-value" id="total-jogadas">0</span>
+          <span class="stat-label">Partidas</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="melhor-pontuacao">0</span>
+          <span class="stat-label">Melhor Pontuação</span>
+        </div>
+      </div>
+      <button id="btn-config" class="btn-link config-link">Configurar API Key</button>
+    </div>
+
+    <!-- Tela de Configuração do Jogo -->
+    <div id="tela-config-jogo" class="hidden">
+      <div class="config-jogo-container">
+        <div class="config-jogo-box">
+          <div class="config-jogo-header">
+            <span class="config-jogo-icon">⚙️</span>
+            <h2>Configurar Partida</h2>
+          </div>
+
+          <div class="config-jogo-opcao">
+            <label class="config-jogo-label">TEMPO POR ROUND</label>
+            <div class="config-jogo-opcoes" id="opcao-tempo">
+              <label class="opcao-btn" data-value="0">
+                <input type="radio" name="tempo" value="0" checked>
+                <span>SEM TEMPO</span>
+              </label>
+              <label class="opcao-btn" data-value="120">
+                <input type="radio" name="tempo" value="120">
+                <span>2 MIN.</span>
+              </label>
+              <label class="opcao-btn" data-value="180">
+                <input type="radio" name="tempo" value="180">
+                <span>3 MIN.</span>
+              </label>
+              <label class="opcao-btn" data-value="300">
+                <input type="radio" name="tempo" value="300">
+                <span>5 MIN.</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="config-jogo-opcao">
+            <label class="config-jogo-label">DAR UM ROLEZINHO?</label>
+            <div class="config-jogo-opcoes" id="opcao-rolezinho">
+              <label class="opcao-btn" data-value="sim">
+                <input type="radio" name="rolezinho" value="sim" checked>
+                <span>SIM</span>
+              </label>
+              <label class="opcao-btn" data-value="nao">
+                <input type="radio" name="rolezinho" value="nao">
+                <span>NÃO</span>
+              </label>
+            </div>
+          </div>
+
+          <button id="btn-entrar-jogo" class="btn-primary">ENTRAR NO JOGO</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Instruções -->
+    <div id="modal-instrucoes" class="modal hidden">
+      <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <h2>Como Jogar</h2>
+        <div class="instrucoes-lista">
+          <div class="instrucao-item">
+            <span class="instrucao-num">1</span>
+            <p>Você verá uma cena do Street View em uma localização misteriosa.</p>
+          </div>
+          <div class="instrucao-item">
+            <span class="instrucao-num">2</span>
+            <p><strong>Explore!</strong> Use o mouse para olhar ao redor (360°) e ande pelas ruas para encontrar pistas.</p>
+          </div>
+          <div class="instrucao-item">
+            <span class="instrucao-num">3</span>
+            <p>Observe: placas, idioma, vegetação, arquitetura, clima, lado da mão dos carros.</p>
+          </div>
+          <div class="instrucao-item">
+            <span class="instrucao-num">4</span>
+            <p>Clique no mini-mapa para marcar onde você acha que é.</p>
+          </div>
+          <div class="instrucao-item">
+            <span class="instrucao-num">5</span>
+            <p>Quanto mais perto, mais pontos! Máximo de 5000 por rodada. São 5 rodadas.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tela do Jogo -->
+    <div id="tela-jogo" class="hidden">
+      <header id="game-header">
+        <div class="header-left">
+          <span class="game-title">GeoDoido</span>
+        </div>
+        <div class="header-center">
+          <div class="round-info">
+            Rodada <span id="round-atual">1</span>/<span id="round-total">5</span>
+          </div>
+          <div class="score-info">
+            Pontos: <span id="pontuacao-atual">0</span>
+          </div>
+          <div id="timer-display" class="timer-info hidden">
+            ⏱ <span id="timer-valor">0:00</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button id="btn-sair" class="btn-small">Sair</button>
+        </div>
+      </header>
+
+      <!-- Street View Panorama -->
+      <div id="street-view-container">
+        <div id="street-view"></div>
+      </div>
+
+      <!-- Mini-mapa sobreposto -->
+      <div id="mini-map-container">
+        <div id="mini-map-header">
+          <span id="mini-map-coords">CLIQUE NO MAPA E DE SEU PALPITE</span>
+        </div>
+        <div id="mini-map"></div>
+        <div id="mini-map-actions">
+          <button id="btn-palpite" class="btn-primary btn-sm" disabled>Palpite</button>
+          <button id="btn-proxima" class="btn-primary btn-sm hidden">Próxima</button>
+        </div>
+        <div id="palpite-info" class="hidden">
+          <span id="distancia-label">📍 <strong id="distancia-valor">0</strong></span>
+          <span id="pontos-label">⭐ <strong id="pontos-rodada">0</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tela de Resultado Final -->
+    <div id="tela-resultado" class="hidden">
+      <div class="resultado-container">
+        <div class="resultado-header">
+          <h1>Fim de Jogo!</h1>
+          <div class="resultado-pontuacao-final">
+            <span class="pontuacao-label">Pontuação Total</span>
+            <span class="pontuacao-valor" id="pontuacao-final">0</span>
+          </div>
+        </div>
+        <div class="resultado-rodadas">
+          <h3>Rodadas</h3>
+          <div id="lista-rodadas"></div>
+        </div>
+        <div class="resultado-mensagem" id="mensagem-final"></div>
+        <div class="resultado-botoes">
+          <button id="btn-jogar-novamente" class="btn-primary">Jogar Novamente</button>
+          <button id="btn-voltar-menu" class="btn-secondary">Menu Principal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="api-status" class="hidden"></div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="hidden">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Explorando o mundo...</p>
+      <p class="loading-sub">Gerando locais aleatórios com Street View</p>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="config.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
