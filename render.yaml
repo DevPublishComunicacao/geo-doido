@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: geo-doido
+    runtime: node
+    repo: https://github.com/DevPublishComunicacao/geo-doido
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: 22
