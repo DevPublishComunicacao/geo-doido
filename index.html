@@ -119,18 +119,16 @@
         <div class="header-left">
           <span class="game-title">GeoDoido</span>
         </div>
-        <div class="header-center">
-          <div class="round-info">
-            Rodada <span id="round-atual">1</span>/<span id="round-total">5</span>
-          </div>
-          <div class="score-info">
-            Pontos: <span id="pontuacao-atual">0</span>
-          </div>
-          <div id="timer-display" class="timer-info hidden">
-            ⏱ <span id="timer-valor">0:00</span>
+        <div id="round-tracker">
+          <div class="round-steps" id="round-steps"></div>
+          <div class="round-details" id="round-details">
+            <span class="rd-label" id="rd-round-label">Round 01</span>
+            <span class="rd-score" id="rd-score">⭐ 0 pts</span>
+            <span class="rd-time hidden" id="rd-time">⏱ 0:00</span>
           </div>
         </div>
-        <div class="header-right">
+        <div class="header-actions">
+          <button id="btn-fullscreen" class="btn-small btn-fullscreen" title="Tela inteira">⛶</button>
           <button id="btn-sair" class="btn-small">Sair</button>
         </div>
       </header>
@@ -138,6 +136,14 @@
       <!-- Street View Panorama -->
       <div id="street-view-container">
         <div id="street-view"></div>
+        <div id="compass" class="hidden">
+          <div class="compass-strip" id="compass-strip"></div>
+          <div class="compass-pointer">▼</div>
+        </div>
+        <div id="timer-box" class="hidden">
+          <span id="timer-valor">0:00</span>
+        </div>
+        <button id="btn-voltar-inicio" class="hidden" title="Voltar ao ponto inicial">🚩</button>
       </div>
 
       <!-- Mini-mapa sobreposto -->

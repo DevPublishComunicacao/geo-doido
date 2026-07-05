@@ -152,6 +152,29 @@ body {
   color: #fff;
 }
 
+.btn-fullscreen {
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 8px 14px;
+  border-color: #3a7bd5;
+  color: #3a7bd5;
+}
+
+.btn-fullscreen:hover {
+  background: rgba(58, 123, 213, 0.15);
+  color: #00d2ff;
+  border-color: #00d2ff;
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.2);
+}
+
+.fullscreen-mode #tela-jogo {
+  height: 100%;
+}
+
+.fullscreen-mode #game-header {
+  padding: 6px 12px;
+}
+
 .stats-globais {
   display: flex;
   gap: 3rem;
@@ -266,38 +289,110 @@ body {
 #game-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 20px;
+  padding: 8px 16px;
   background: rgba(26,26,46,0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid #2a2a3e;
   z-index: 500;
   flex-shrink: 0;
+  gap: 8px;
 }
 
 .game-title {
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1rem;
   background: linear-gradient(135deg, #00d2ff, #3a7bd5);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  white-space: nowrap;
 }
 
-.header-center {
+.header-left {
+  flex-shrink: 0;
+}
+
+.header-actions {
   display: flex;
-  gap: 2rem;
   align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
-.round-info, .score-info {
-  font-size: 0.85rem;
-  color: #aaa;
+/* Round Tracker */
+#round-tracker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  margin-right: 12px;
 }
 
-.round-info span, .score-info span {
-  color: #fff;
+.round-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.round-step {
+  font-size: 0.65rem;
   font-weight: 700;
+  color: #555;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid #2a2a3e;
+  border-radius: 4px;
+  padding: 1px 5px;
+  line-height: 1.4;
+  transition: all 0.2s;
+}
+
+.round-step.ativo {
+  color: #00d2ff;
+  border-color: #00d2ff;
+  background: rgba(0, 210, 255, 0.1);
+}
+
+.round-step.concluido {
+  color: #4caf50;
+  border-color: #4caf50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.round-step.total {
+  color: #f0a030;
+  border-color: #f0a030;
+  background: rgba(240, 160, 48, 0.1);
+}
+
+.round-step-arrow {
+  font-size: 0.6rem;
+  color: #444;
+  margin: 0 2px;
+  line-height: 1;
+}
+
+.round-details {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.65rem;
+}
+
+.rd-label {
+  color: #888;
+  font-weight: 600;
+}
+
+.rd-score {
+  color: #00d2ff;
+  font-weight: 700;
+}
+
+.rd-time {
+  color: #f0a030;
+  font-weight: 600;
 }
 
 /* Street View Container */
@@ -311,6 +406,67 @@ body {
 #street-view {
   width: 100%;
   height: 100%;
+}
+
+/* Compass */
+#compass {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  width: 55%;
+  max-width: 380px;
+}
+
+.compass-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+  background: rgba(15, 15, 26, 0.75);
+  border-radius: 8px;
+  padding: 6px 6px;
+  border: 1px solid rgba(255,255,255,0.15);
+  overflow: hidden;
+}
+
+.compass-strip .dir {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  transition: color 0.15s, transform 0.15s;
+  padding: 2px 0;
+}
+
+.compass-strip .dir.ativo {
+  color: #00d2ff;
+  transform: scale(1.3);
+}
+
+.compass-strip .tick {
+  display: block;
+  width: 2px;
+  height: 14px;
+  background: rgba(255,255,255,0.2);
+  flex-shrink: 0;
+  margin: 0 3px;
+}
+
+.compass-pointer {
+  font-size: 0.75rem;
+  color: #00d2ff;
+  line-height: 1;
+  margin-top: 3px;
+  text-shadow: 0 0 6px rgba(0, 210, 255, 0.5);
 }
 
 /* Mini-mapa */
@@ -570,6 +726,15 @@ body {
   background: #1a1a2e !important;
   color: #e0e0e0 !important;
   border-color: #333 !important;
+  width: 22px !important;
+  height: 22px !important;
+  line-height: 22px !important;
+  font-size: 12px !important;
+}
+
+#mini-map .gm-bundled-control {
+  transform: scale(0.7);
+  transform-origin: bottom right;
 }
 
 .leaflet-control-attribution {
@@ -582,7 +747,7 @@ body {
   color: #888 !important;
 }
 
-/* Responsivo */
+/* Responsivo - Celular */
 @media (max-width: 768px) {
   .logo h1 {
     font-size: 2.5rem;
@@ -602,9 +767,51 @@ body {
     height: 140px;
   }
 
-  .header-center {
-    gap: 1rem;
+  .game-title {
+    font-size: 0.9rem;
+  }
+
+  #game-header {
+    padding: 6px 10px;
+  }
+}
+
+/* Responsivo - Tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
+  #mini-map-container {
+    width: 260px;
+    bottom: 16px;
+    right: 16px;
+  }
+
+  #mini-map {
+    height: 180px;
+  }
+
+  #mini-map-container:hover {
+    width: 500px;
+  }
+
+  #mini-map-container:hover #mini-map {
+    height: 320px;
+  }
+
+  .btn-small {
+    padding: 6px 12px;
     font-size: 0.8rem;
+  }
+}
+
+/* Touch devices - sem hover expansivo no mini-mapa */
+@media (hover: none) {
+  #mini-map-container:hover {
+    width: 260px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    border-color: #2a2a3e;
+  }
+
+  #mini-map-container:hover #mini-map {
+    height: 200px;
   }
 }
 
@@ -705,14 +912,58 @@ body {
   margin-top: 0.5rem;
 }
 
-/* Timer */
-.timer-info {
-  font-size: 0.85rem;
-  color: #f0a030;
-  font-weight: 700;
+/* Flag voltar ao inicio */
+#btn-voltar-inicio {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 600;
+  font-size: 1.5rem;
+  background: rgba(15, 15, 26, 0.7);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  line-height: 1;
+  transition: all 0.2s;
+  color: #fff;
 }
 
-.timer-info.alerta {
+#btn-voltar-inicio:hover {
+  background: rgba(15, 15, 26, 0.9);
+  border-color: #3a7bd5;
+  box-shadow: 0 0 12px rgba(58, 123, 213, 0.3);
+}
+
+/* Timer Box */
+#timer-box {
+  position: absolute;
+  top: 62px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 600;
+  pointer-events: none;
+  background: rgba(15, 15, 26, 0.8);
+  border: 2px solid #f0a030;
+  border-radius: 10px;
+  padding: 6px 20px;
+  box-shadow: 0 0 16px rgba(240, 160, 48, 0.25);
+}
+
+#timer-box #timer-valor {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #f0a030;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+}
+
+#timer-box.alerta {
+  border-color: #ff4444;
+  box-shadow: 0 0 20px rgba(255, 68, 68, 0.4);
+}
+
+#timer-box.alerta #timer-valor {
   color: #ff4444;
   animation: piscar 0.6s ease-in-out infinite alternate;
 }

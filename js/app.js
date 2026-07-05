@@ -13,6 +13,9 @@ let gmapsMarkersExtra = [];
 
 let configTempoRodada = 0;
 let configRolezinho = false;
+let posicaoInicialRodada = null;
+let temposRodada = [];
+let roundTimerStart = 0;
 let timerInterval = null;
 let timerSegundos = 0;
 
@@ -204,6 +207,8 @@ function initStreetView(lat, lng) {
   if (!container) return;
 
   if (!googleReady || typeof google === 'undefined' || !google.maps) {
+    const compass = $('compass');
+    if (compass) compass.classList.add('hidden');
     container.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#666;gap:1rem;background:#0f0f1a;padding:2rem;">
         <div style="font-size:3rem;">🗺️</div>
@@ -228,22 +233,17 @@ function initStreetView(lat, lng) {
     streetViewPanorama.setOptions(rolezinhoOpts);
   }
 
-  streetViewService.getPanorama({
-    location: { lat, lng },
-    radius: 200,
-    source: google.maps.StreetViewSource.OUTDOOR
-  }, (data, status) => {
-    if (status === google.maps.StreetViewStatus.OK && data && data.location) {
-      const pos = data.location.latLng;
-      if (streetViewPanorama && typeof streetViewPanorama.setPosition === 'function') {
-        streetViewPanorama.setPosition(pos);
-        streetViewPanorama.setPov({ heading: Math.random() * 360, pitch: 0 });
-        return;
-      }
+  const headingInicial = Math.random() * 360;
+
+  function aplicarPosicao(pos, heading) {
+    if (streetViewPanorama && typeof streetViewPanorama.setPosition === 'function') {
+      streetViewPanorama.setPosition(pos);
+      streetViewPanorama.setPov({ heading, pitch: 0 });
+    } else {
       try {
         streetViewPanorama = new google.maps.StreetViewPanorama(container, {
           position: pos,
-          pov: { heading: Math.random() * 360, pitch: 0 },
+          pov: { heading, pitch: 0 },
           zoom: 0,
           enableCloseButton: false,
           addressControl: false,
@@ -252,42 +252,34 @@ function initStreetView(lat, lng) {
           panControl: false,
           showRoadLabels: true,
           visible: true,
-          zoomControl: true,
+          zoomControl: false,
           ...rolezinhoOpts,
         });
       } catch (e) {
         mostrarFalhaStreetView(container);
+        return;
       }
+    }
+    posicaoInicialRodada = { lat: pos.lat(), lng: pos.lng(), heading };
+    const btn = $('btn-voltar-inicio');
+    if (btn) btn.classList.remove('hidden');
+    initCompassListener();
+  }
+
+  streetViewService.getPanorama({
+    location: { lat, lng },
+    radius: 200,
+    source: google.maps.StreetViewSource.OUTDOOR
+  }, (data, status) => {
+    if (status === google.maps.StreetViewStatus.OK && data && data.location) {
+      aplicarPosicao(data.location.latLng, headingInicial);
     } else {
       streetViewService.getPanorama({
         location: { lat, lng },
         radius: 500,
       }, (data2, status2) => {
         if (status2 === google.maps.StreetViewStatus.OK && data2 && data2.location) {
-          const pos = data2.location.latLng;
-          if (streetViewPanorama && typeof streetViewPanorama.setPosition === 'function') {
-            streetViewPanorama.setPosition(pos);
-            streetViewPanorama.setPov({ heading: Math.random() * 360, pitch: 0 });
-            return;
-          }
-          try {
-            streetViewPanorama = new google.maps.StreetViewPanorama(container, {
-              position: pos,
-              pov: { heading: Math.random() * 360, pitch: 0 },
-              zoom: 0,
-              enableCloseButton: false,
-              addressControl: false,
-              fullscreenControl: false,
-              motionTrackingControl: false,
-              panControl: false,
-              showRoadLabels: true,
-              visible: true,
-              zoomControl: true,
-              ...rolezinhoOpts,
-            });
-          } catch (e) {
-            mostrarFalhaStreetView(container);
-          }
+          aplicarPosicao(data2.location.latLng, headingInicial);
         } else {
           mostrarFalhaStreetView(container);
         }
@@ -296,7 +288,66 @@ function initStreetView(lat, lng) {
   });
 }
 
+function voltarAoInicio() {
+  if (!posicaoInicialRodada || !streetViewPanorama) return;
+  const pos = new google.maps.LatLng(posicaoInicialRodada.lat, posicaoInicialRodada.lng);
+  streetViewPanorama.setPosition(pos);
+  streetViewPanorama.setPov({ heading: posicaoInicialRodada.heading, pitch: 0 });
+}
+
+function getDirecao(heading) {
+  const dirs = ['N', 'NE', 'L', 'SE', 'S', 'SO', 'O', 'NO'];
+  const index = Math.round(heading / 45) % 8;
+  return dirs[index];
+}
+
+function buildCompassStrip() {
+  const dirs = ['N', 'NE', 'L', 'SE', 'S', 'SO', 'O', 'NO'];
+  const strip = $('compass-strip');
+  if (!strip) return;
+  strip.innerHTML = '';
+  dirs.forEach((d, i) => {
+    if (i > 0) {
+      for (let t = 0; t < 4; t++) {
+        const tick = document.createElement('span');
+        tick.className = 'tick';
+        strip.appendChild(tick);
+      }
+    }
+    const span = document.createElement('span');
+    span.className = 'dir';
+    span.dataset.dir = d;
+    span.textContent = d;
+    strip.appendChild(span);
+  });
+}
+
+function initCompassListener() {
+  const compass = $('compass');
+  if (!compass) return;
+  if (!streetViewPanorama || typeof streetViewPanorama.addListener !== 'function') {
+    compass.classList.add('hidden');
+    return;
+  }
+  compass.classList.remove('hidden');
+  buildCompassStrip();
+  const update = () => {
+    const heading = streetViewPanorama.getPov().heading;
+    const dirs = ['N', 'NE', 'L', 'SE', 'S', 'SO', 'O', 'NO'];
+    const index = Math.round(heading / 45) % 8;
+    const els = compass.querySelectorAll('.dir');
+    els.forEach(el => el.classList.remove('ativo'));
+    if (els[index]) els[index].classList.add('ativo');
+  };
+  streetViewPanorama.addListener('pov_changed', update);
+  update();
+}
+
 function mostrarFalhaStreetView(container) {
+  const compass = $('compass');
+  if (compass) compass.classList.add('hidden');
+  const btn = $('btn-voltar-inicio');
+  if (btn) btn.classList.add('hidden');
   container.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#666;gap:1rem;background:#0f0f1a;padding:2rem;">
       <div style="font-size:3rem;">🗺️</div>
@@ -333,6 +384,83 @@ function limparCamadas() {
   }
 }
 
+function formatarTempoTracker(segundos) {
+  const min = Math.floor(segundos / 60);
+  const seg = segundos % 60;
+  return `${min}:${seg.toString().padStart(2, '0')}`;
+}
+
+function buildRoundTracker() {
+  const container = $('round-steps');
+  if (!container) return;
+  container.innerHTML = '';
+  for (let i = 1; i <= jogo.totalRodadas; i++) {
+    if (i > 1) {
+      const arrow = document.createElement('span');
+      arrow.className = 'round-step-arrow';
+      arrow.textContent = '→';
+      container.appendChild(arrow);
+    }
+    const step = document.createElement('span');
+    step.className = 'round-step';
+    step.dataset.round = i;
+    step.textContent = i.toString().padStart(2, '0');
+    container.appendChild(step);
+  }
+  const arrow = document.createElement('span');
+  arrow.className = 'round-step-arrow';
+  arrow.textContent = '→';
+  container.appendChild(arrow);
+  const total = document.createElement('span');
+  total.className = 'round-step total';
+  total.id = 'rd-step-total';
+  total.textContent = 'Total';
+  container.appendChild(total);
+}
+
+function updateRoundTracker() {
+  const steps = document.querySelectorAll('.round-step');
+  steps.forEach(s => s.classList.remove('ativo', 'concluido'));
+  for (let i = 0; i < jogo.rodadaAtual; i++) {
+    if (steps[i]) steps[i].classList.add('concluido');
+  }
+  const atual = steps[jogo.rodadaAtual];
+  if (atual) atual.classList.add('ativo');
+
+  const scoreAtual = jogo.palpites.length > 0
+    ? jogo.palpites[jogo.palpites.length - 1].pontos
+    : 0;
+  $('rd-round-label').textContent = `Round ${(jogo.rodadaAtual + 1).toString().padStart(2, '0')}`;
+  $('rd-score').textContent = `⭐ ${scoreAtual} pts`;
+
+  const tempoEl = $('rd-time');
+  if (configTempoRodada > 0) {
+    tempoEl.classList.remove('hidden');
+    const gasto = temposRodada[jogo.rodadaAtual] || 0;
+    tempoEl.textContent = `⏱ ${formatarTempoTracker(gasto)}`;
+  } else {
+    tempoEl.classList.add('hidden');
+  }
+}
+
+function atualizarTrackerTotal() {
+  const totalPts = jogo.pontuacao;
+  const totalTempo = temposRodada.reduce((a, b) => a + b, 0);
+  $('rd-round-label').textContent = 'Total';
+  $('rd-score').textContent = `⭐ ${totalPts} pts`;
+  const tempoEl = $('rd-time');
+  if (configTempoRodada > 0) {
+    tempoEl.classList.remove('hidden');
+    tempoEl.textContent = `⏱ ${formatarTempoTracker(totalTempo)}`;
+  } else {
+    tempoEl.classList.add('hidden');
+  }
+  const steps = document.querySelectorAll('.round-step');
+  steps.forEach(s => s.classList.remove('ativo', 'concluido'));
+  const totalStep = $('rd-step-total');
+  if (totalStep) totalStep.classList.add('ativo');
+}
+
 function iniciarRodada() {
   const local = jogo.getRodadaAtual();
   if (!local) return;
@@ -340,10 +468,6 @@ function iniciarRodada() {
   palpiteConfirmado = false;
   limparCamadas();
   pararTimer();
-
-  $('round-atual').textContent = jogo.rodadaAtual + 1;
-  $('round-total').textContent = jogo.totalRodadas;
-  $('pontuacao-atual').textContent = jogo.pontuacao.toLocaleString('pt-BR');
 
   $('btn-palpite').classList.remove('hidden');
   $('btn-palpite').disabled = true;
@@ -372,15 +496,19 @@ function iniciarRodada() {
     }
   }
 
+  roundTimerStart = configTempoRodada > 0 ? configTempoRodada : 0;
+
   if (configTempoRodada > 0) {
     iniciarTimer(configTempoRodada);
   }
+
+  updateRoundTracker();
 }
 
 function iniciarTimer(segundos) {
   pararTimer();
   timerSegundos = segundos;
-  const display = $('timer-display');
+  const display = $('timer-box');
   const valor = $('timer-valor');
   display.classList.remove('hidden', 'alerta');
   atualizarTimerDisplay();
@@ -422,7 +550,12 @@ function pararTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
   }
-  $('timer-display').classList.add('hidden');
+  const tb = $('timer-box');
+  if (tb) tb.classList.add('hidden');
+  if (configTempoRodada > 0 && jogo.rodadaAtual < jogo.totalRodadas) {
+    const gasto = roundTimerStart - timerSegundos;
+    temposRodada[jogo.rodadaAtual] = Math.max(0, gasto);
+  }
 }
 
 function atualizarTimerDisplay() {
@@ -461,6 +594,7 @@ function confirmarPalpite() {
     if (currentDisplay >= prePoints) {
       currentDisplay = prePoints;
       clearInterval(interval);
+      updateRoundTracker();
     }
     $('pontos-rodada').textContent = currentDisplay;
   }, 40);
@@ -534,6 +668,11 @@ function proximaRodada() {
 
 function mostrarResultado() {
   pararTimer();
+  if (configTempoRodada > 0 && jogo.rodadaAtual < jogo.totalRodadas) {
+    const gasto = roundTimerStart - timerSegundos;
+    temposRodada[jogo.rodadaAtual] = Math.max(0, gasto);
+  }
+  atualizarTrackerTotal();
   mostrarTela('tela-resultado');
   $('pontuacao-final').textContent = jogo.pontuacao.toLocaleString('pt-BR');
 
@@ -586,11 +725,13 @@ async function iniciarJogo() {
   limparCamadas();
   mostrarTela('tela-jogo');
   $('loading-overlay').classList.remove('hidden');
+  temposRodada = [];
 
   try {
     await jogo.iniciarJogo();
     $('loading-overlay').classList.add('hidden');
     initMiniMapa();
+    buildRoundTracker();
     iniciarRodada();
   } catch (e) {
     $('loading-overlay').classList.add('hidden');
@@ -599,6 +740,22 @@ async function iniciarJogo() {
     voltarMenu();
   }
 }
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+    document.body.classList.add('fullscreen-mode');
+  } else {
+    document.exitFullscreen().catch(() => {});
+    document.body.classList.remove('fullscreen-mode');
+  }
+}
+
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) {
+    document.body.classList.remove('fullscreen-mode');
+  }
+});
 
 function voltarMenu() {
   pararTimer();
@@ -624,10 +781,23 @@ function lerConfigJogo() {
   return true;
 }
 
+function detectarTablet() {
+  return window.matchMedia('(hover: none) and (pointer: coarse)').matches &&
+         window.innerWidth >= 600;
+}
+
+function autoFullscreen() {
+  if (detectarTablet() && !document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+    document.body.classList.add('fullscreen-mode');
+  }
+}
+
 function entrarJogo() {
   lerConfigJogo();
   carregarGoogleMaps(() => {
     iniciarJogo();
+    autoFullscreen();
   });
 }
 
@@ -651,8 +821,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   $('btn-palpite').addEventListener('click', confirmarPalpite);
   $('btn-proxima').addEventListener('click', proximaRodada);
+  $('btn-fullscreen').addEventListener('click', toggleFullscreen);
   $('btn-sair').addEventListener('click', voltarMenu);
   $('btn-jogar-novamente').addEventListener('click', tentarIniciarJogo);
   $('btn-voltar-menu').addEventListener('click', voltarMenu);
   $('btn-entrar-jogo').addEventListener('click', entrarJogo);
+  $('btn-voltar-inicio').addEventListener('click', voltarAoInicio);
 });
