@@ -362,6 +362,11 @@ body.landing-active {
   flex-direction: column;
   height: 100%;
   position: relative;
+  padding-top: 56px;
+}
+
+.fullscreen-mode #tela-jogo {
+  padding-top: 0;
 }
 
 #game-header {
