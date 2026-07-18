@@ -232,7 +232,7 @@ body.landing-active {
 }
 
 .fullscreen-mode #game-header {
-  padding: 6px 12px;
+  display: none !important;
 }
 
 .fullscreen-mode #nav-right {
