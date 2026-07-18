@@ -364,14 +364,15 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 }
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  const googleCallbackURL = (req) => `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+
   // Iniciar login Google
   router.get('/api/auth/google',
     (req, res, next) => {
-      const callbackURL = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
       passport.authenticate('google', {
         scope: ['profile', 'email'],
         session: false,
-        callbackURL,
+        callbackURL: googleCallbackURL(req),
       })(req, res, next);
     }
   );
@@ -379,7 +380,11 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   // Callback do Google
   router.get('/api/auth/google/callback',
     (req, res, next) => {
-      passport.authenticate('google', { session: false, failureRedirect: '/login.html?erro=google' })(req, res, next);
+      passport.authenticate('google', {
+        session: false,
+        failureRedirect: '/login.html?erro=google',
+        callbackURL: googleCallbackURL(req),
+      })(req, res, next);
     },
     (req, res) => {
       const token = gerarToken(req.user);
