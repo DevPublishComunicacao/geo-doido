@@ -822,7 +822,9 @@ function toggleFullscreen() {
 }
 
 document.addEventListener('fullscreenchange', () => {
-  if (!document.fullscreenElement) {
+  if (document.fullscreenElement) {
+    document.body.classList.add('fullscreen-mode');
+  } else {
     document.body.classList.remove('fullscreen-mode');
   }
   atualizarHeaderFullscreen();
@@ -832,7 +834,8 @@ function atualizarHeaderFullscreen() {
   const gh = $('game-header');
   const fsh = $('fs-header');
   if (!gh || !fsh) return;
-  if (document.fullscreenElement) {
+  const isFs = document.body.classList.contains('fullscreen-mode');
+  if (isFs) {
     gh.classList.add('hidden');
     fsh.classList.remove('hidden');
   } else {

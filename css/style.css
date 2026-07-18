@@ -334,7 +334,7 @@ body.landing-active {
   font-size: 0.68rem;
 }
 .fullscreen-mode #fs-header {
-  display: flex;
+  display: flex !important;
 }
 
 .fullscreen-mode #nav-right {
