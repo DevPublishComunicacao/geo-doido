@@ -252,70 +252,69 @@ body.landing-active {
   color: rgba(255,255,255,0.5);
   letter-spacing: -0.5px;
 }
-#fs-header .fs-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
 #fs-header .fs-actions {
   display: flex;
   gap: 6px;
   pointer-events: auto;
+  flex-shrink: 0;
 }
 #fs-header .fs-round-tracker {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  margin-top: 40px;
+  align-items: center;
+  gap: 16px;
   background: rgba(0,0,0,0.45);
   backdrop-filter: blur(6px);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 10px;
   padding: 8px 14px;
 }
-#fs-header .fs-round-tracker .round-steps {
+#fs-header .fs-tracker-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+#fs-header .fs-tracker-info .round-steps {
   display: flex;
   align-items: center;
   gap: 0;
   justify-content: flex-end;
   width: 100%;
 }
-#fs-header .fs-round-tracker .round-step {
+#fs-header .fs-tracker-info .round-step {
   font-size: 0.72rem;
   padding: 2px 5px;
   color: #888;
   border-radius: 3px;
   transition: color 0.2s;
 }
-#fs-header .fs-round-tracker .round-step.concluido {
+#fs-header .fs-tracker-info .round-step.concluido {
   color: #4caf50;
 }
-#fs-header .fs-round-tracker .round-step.ativo {
+#fs-header .fs-tracker-info .round-step.ativo {
   color: #ff4444;
   font-weight: 700;
 }
-#fs-header .fs-round-tracker .round-step-arrow {
+#fs-header .fs-tracker-info .round-step-arrow {
   color: #555;
   font-size: 0.6rem;
   margin: 0 2px;
 }
-#fs-header .fs-round-tracker .round-details {
+#fs-header .fs-tracker-info .round-details {
   display: flex;
   gap: 10px;
   align-items: center;
 }
-#fs-header .fs-round-tracker .rd-label {
+#fs-header .fs-tracker-info .rd-label {
   color: #ddd;
   font-size: 0.72rem;
   font-weight: 600;
 }
-#fs-header .fs-round-tracker .rd-score {
+#fs-header .fs-tracker-info .rd-score {
   color: #ffd700;
   font-size: 0.72rem;
 }
-#fs-header .fs-round-tracker .rd-time {
+#fs-header .fs-tracker-info .rd-time {
   color: #aaa;
   font-size: 0.68rem;
 }
