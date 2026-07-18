@@ -352,16 +352,18 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
     const state = crypto.randomBytes(16).toString('hex');
     req.session.googleState = state;
 
-    const params = new URLSearchParams({
-      client_id: GOOGLE_CLIENT_ID,
-      redirect_uri: callbackURL,
-      response_type: 'code',
-      scope: scopes.join(' '),
-      state,
-      access_type: 'online',
+    req.session.save((err) => {
+      if (err) console.error('=== SESSION SAVE ERROR ===', err);
+      const params = new URLSearchParams({
+        client_id: GOOGLE_CLIENT_ID,
+        redirect_uri: callbackURL,
+        response_type: 'code',
+        scope: scopes.join(' '),
+        state,
+        access_type: 'online',
+      });
+      res.redirect(`${authUrlBase}?${params.toString()}`);
     });
-
-    res.redirect(`${authUrlBase}?${params.toString()}`);
   });
 
   function httpsJson(method, url, headers, body) {
