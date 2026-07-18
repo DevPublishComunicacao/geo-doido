@@ -866,7 +866,7 @@ body.landing-active {
   padding: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1.8rem;
+  gap: 0.8rem;
 }
 
 .config-jogo-header {
@@ -874,14 +874,14 @@ body.landing-active {
 }
 
 .config-jogo-icon {
-  font-size: 2.5rem;
+  font-size: 1.8rem;
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.2rem;
 }
 
 .config-jogo-header h2 {
   color: #00d2ff;
-  font-size: 1.4rem;
+  font-size: 1.05rem;
 }
 
 .config-jogo-opcao {
@@ -1339,6 +1339,48 @@ body.landing-active {
   background: rgba(15, 15, 26, 0.15);
 }
 
+body.auth-page::after,
+body.game-page::after {
+  display: none;
+}
+
+/* Loading overlay com globo */
+#bg-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  background: #0f0f1a;
+  transition: opacity 0.6s ease;
+}
+
+#bg-loading.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#bg-loading-globe-wrap {
+  width: 120px;
+  height: 120px;
+  position: relative;
+}
+
+#bg-loading-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+#bg-loading-text {
+  font-size: 1rem;
+  color: #666;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
 .auth-page #hero-streetview {
   opacity: 0.5;
 }
@@ -1625,6 +1667,22 @@ body.landing-active {
   margin-bottom: 2rem;
 }
 
+.auth-back-link {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  color: #888;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: color 0.2s;
+  z-index: 2;
+}
+
+.auth-back-link:hover {
+  color: #00d2ff;
+}
+
 .auth-tabs {
   display: flex;
   gap: 0;
@@ -1829,4 +1887,266 @@ body.landing-active {
   #nav-links {
     display: none;
   }
+}
+
+/* Mode selector */
+.modo-btn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.modo-btn span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 0.75rem;
+}
+
+#config-opcoes-extras .config-jogo-opcao {
+  margin-top: 1.5rem;
+}
+
+#pais-mosaico-container {
+  max-height: 300px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#pais-mosaico {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 6px;
+  overflow-y: auto;
+  max-height: 250px;
+  padding: 4px;
+}
+
+.pais-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border-radius: 10px;
+  border: 2px solid #2a2a3e;
+  background: #0f0f1a;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pais-card:hover {
+  border-color: #555;
+  background: rgba(255,255,255,0.03);
+}
+
+.pais-card.selected {
+  border-color: #00d2ff;
+  background: rgba(0, 210, 255, 0.08);
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.15);
+}
+
+.pais-card-img {
+  width: 56px;
+  height: 38px;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.pais-card-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.pais-card-nome {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #e0e0e0;
+  line-height: 1.2;
+}
+
+.pais-card-atracao {
+  font-size: 0.6rem;
+  color: #888;
+  line-height: 1.2;
+}
+
+/* Ranking */
+#ranking-section {
+  width: 100%;
+  max-width: 520px;
+  margin-top: 1.5rem;
+}
+
+#ranking-tabs {
+  display: flex;
+  gap: 4px;
+  background: #1a1a2e;
+  border-radius: 10px;
+  padding: 4px;
+  border: 1px solid #2a2a3e;
+}
+
+.ranking-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #666;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+
+.ranking-tab.active {
+  background: #0f0f1a;
+  color: #00d2ff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.ranking-tab:hover:not(.active) {
+  color: #999;
+}
+
+#ranking-content {
+  margin-top: 0.5rem;
+  max-height: 340px;
+  overflow-y: auto;
+  background: #1a1a2e;
+  border: 1px solid #2a2a3e;
+  border-radius: 10px;
+  padding: 0.5rem;
+}
+
+#ranking-loading,
+#ranking-erro {
+  text-align: center;
+  padding: 2rem;
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.ranking-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.ranking-item:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.ranking-pos {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #555;
+  min-width: 28px;
+  text-align: center;
+}
+
+.ranking-pos.top1 { color: #ffd700; }
+.ranking-pos.top2 { color: #c0c0c0; }
+.ranking-pos.top3 { color: #cd7f32; }
+
+.ranking-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #2a2a3e;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.ranking-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ranking-nome {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e0e0e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ranking-partidas {
+  font-size: 0.7rem;
+  color: #666;
+}
+
+.ranking-pontos {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #00d2ff;
+  white-space: nowrap;
+}
+
+#ranking-pais-selector {
+  margin-top: 0.4rem;
+}
+
+#ranking-pais-select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #2a2a3e;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+}
+
+#ranking-pais-select:focus {
+  border-color: #3a7bd5;
+}
+
+#ranking-user-score {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgba(0, 210, 255, 0.06);
+  border: 1px solid rgba(0, 210, 255, 0.15);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+#ranking-user-label {
+  font-size: 0.8rem;
+  color: #aaa;
+  font-weight: 600;
+}
+
+#ranking-user-valor {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #00d2ff;
+}
+
+.ranking-item.ranking-destaque {
+  background: rgba(0, 210, 255, 0.08);
+  border: 1px solid rgba(0, 210, 255, 0.2);
+}
+
+.ranking-voce {
+  font-size: 0.7rem;
+  color: #00d2ff;
+  font-weight: 400;
 }

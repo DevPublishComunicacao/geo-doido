@@ -412,13 +412,16 @@ function calcularRanking(partidas, pontos) {
 // SALVAR PARTIDA
 router.post('/api/auth/save-game', authMiddleware, async (req, res) => {
   try {
-    const { pontuacao } = req.body;
+    const { pontuacao, modo, paisCodigo } = req.body;
     if (pontuacao == null || typeof pontuacao !== 'number') {
       return res.status(400).json({ erro: 'Pontuação é obrigatória' });
     }
+    const modosValidos = ['mundo', 'paises', 'pontos-turisticos'];
+    const modoVal = modosValidos.includes(modo) ? modo : 'mundo';
+    const paisVal = modoVal === 'paises' && paisCodigo ? paisCodigo : null;
     await db.query(
-      'INSERT INTO partidas (usuario_id, pontuacao) VALUES ($1, $2)',
-      [req.usuario.id, Math.round(pontuacao)]
+      'INSERT INTO partidas (usuario_id, pontuacao, modo, pais_codigo) VALUES ($1, $2, $3, $4)',
+      [req.usuario.id, Math.round(pontuacao), modoVal, paisVal]
     );
     res.json({ mensagem: 'Partida salva!' });
   } catch (err) {
@@ -430,12 +433,13 @@ router.post('/api/auth/save-game', authMiddleware, async (req, res) => {
 // PEGAR RANKING DO USUÁRIO
 router.get('/api/auth/ranking', authMiddleware, async (req, res) => {
   try {
+    const modoRank = ['mundo', 'paises', 'pontos-turisticos'].includes(req.query.modo) ? req.query.modo : 'mundo';
     const result = await db.query(
       `SELECT COUNT(*)::int AS total_partidas, COALESCE(SUM(pontuacao), 0)::int AS total_pontos
        FROM partidas
-       WHERE usuario_id = $1
+       WHERE usuario_id = $1 AND modo = $2
          AND criado_em >= NOW() - INTERVAL '30 days'`,
-      [req.usuario.id]
+      [req.usuario.id, modoRank]
     );
 
     const { total_partidas, total_pontos } = result.rows[0];
@@ -456,9 +460,14 @@ router.get('/api/auth/ranking', authMiddleware, async (req, res) => {
 // RECORDE GERAL
 router.get('/api/auth/recorde-geral', async (req, res) => {
   try {
-    const result = await db.query(
-      'SELECT COALESCE(MAX(pontuacao), 0)::int AS recorde FROM partidas'
-    );
+    const modo = req.query.modo;
+    let sql = 'SELECT COALESCE(MAX(pontuacao), 0)::int AS recorde FROM partidas';
+    const params = [];
+    if (['mundo', 'paises', 'pontos-turisticos'].includes(modo)) {
+      sql += ' WHERE modo = $1';
+      params.push(modo);
+    }
+    const result = await db.query(sql, params);
     res.json({ recorde: result.rows[0].recorde });
   } catch (err) {
     console.error('Erro ao buscar recorde geral:', err);
@@ -469,16 +478,120 @@ router.get('/api/auth/recorde-geral', async (req, res) => {
 // ESTATÍSTICAS DO USUÁRIO
 router.get('/api/auth/stats', authMiddleware, async (req, res) => {
   try {
+    const modo = req.query.modo;
+    let sql = `SELECT COUNT(*)::int AS total_partidas,
+                      COALESCE(MAX(pontuacao), 0)::int AS melhor_pontuacao
+               FROM partidas
+               WHERE usuario_id = $1`;
+    const params = [req.usuario.id];
+    if (['mundo', 'paises', 'pontos-turisticos'].includes(modo)) {
+      sql += ' AND modo = $2';
+      params.push(modo);
+    }
+    const result = await db.query(sql, params);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Erro ao buscar stats:', err);
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// ESTATÍSTICAS DO USUÁRIO POR PAÍS (MODO PAÍSES)
+router.get('/api/auth/stats/pais/:codigo', authMiddleware, async (req, res) => {
+  try {
     const result = await db.query(
       `SELECT COUNT(*)::int AS total_partidas,
               COALESCE(MAX(pontuacao), 0)::int AS melhor_pontuacao
        FROM partidas
-       WHERE usuario_id = $1`,
-      [req.usuario.id]
+       WHERE usuario_id = $1 AND modo = 'paises' AND pais_codigo = $2`,
+      [req.usuario.id, req.params.codigo]
     );
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('Erro ao buscar stats:', err);
+    console.error('Erro ao buscar stats do país:', err);
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// RECORDE GERAL POR PAÍS (MODO PAÍSES)
+router.get('/api/auth/recorde/pais/:codigo', async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT COALESCE(MAX(pontuacao), 0)::int AS recorde
+       FROM partidas
+       WHERE modo = 'paises' AND pais_codigo = $1`,
+      [req.params.codigo]
+    );
+    res.json({ recorde: result.rows[0].recorde });
+  } catch (err) {
+    console.error('Erro ao buscar recorde do país:', err);
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// RANKING GLOBAL POR MODO
+router.get('/api/auth/ranking/global', async (req, res) => {
+  try {
+    const modoRank = ['mundo', 'paises', 'pontos-turisticos'].includes(req.query.modo) ? req.query.modo : 'mundo';
+    const limit = Math.min(parseInt(req.query.limit) || 20, 50);
+    const result = await db.query(
+      `SELECT u.nome, u.avatar_url,
+              COUNT(p.id)::int AS partidas,
+              MAX(p.pontuacao)::int AS melhor_pontuacao,
+              COALESCE(SUM(p.pontuacao), 0)::int AS total_pontos
+       FROM partidas p
+       JOIN usuarios u ON u.id = p.usuario_id
+       WHERE p.modo = $1
+       GROUP BY u.id, u.nome, u.avatar_url
+       ORDER BY melhor_pontuacao DESC
+       LIMIT $2`,
+      [modoRank, limit]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Erro ao buscar ranking global:', err);
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// RANKING POR PAÍS (MODO PAÍSES)
+router.get('/api/auth/ranking/pais/:codigo', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 20, 50);
+    const result = await db.query(
+      `SELECT u.nome, u.avatar_url,
+              COUNT(p.id)::int AS partidas,
+              MAX(p.pontuacao)::int AS melhor_pontuacao,
+              COALESCE(SUM(p.pontuacao), 0)::int AS total_pontos
+       FROM partidas p
+       JOIN usuarios u ON u.id = p.usuario_id
+       WHERE p.modo = 'paises' AND p.pais_codigo = $1
+       GROUP BY u.id, u.nome, u.avatar_url
+       ORDER BY melhor_pontuacao DESC
+       LIMIT $2`,
+      [req.params.codigo, limit]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Erro ao buscar ranking do país:', err);
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
+// LISTA DE PAÍSES COM MELHORES PONTUAÇÕES
+router.get('/api/auth/ranking/paises', async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT pais_codigo, COUNT(*)::int AS total_partidas,
+              MAX(pontuacao)::int AS melhor_pontuacao
+       FROM partidas
+       WHERE modo = 'paises' AND pais_codigo IS NOT NULL
+       GROUP BY pais_codigo
+       ORDER BY melhor_pontuacao DESC`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Erro ao buscar lista de países:', err);
     res.status(500).json({ erro: 'Erro interno' });
   }
 });

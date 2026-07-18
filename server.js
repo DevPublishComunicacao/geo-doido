@@ -28,6 +28,10 @@ app.get('/game', (req, res) => {
   res.sendFile(path.join(__dirname, 'game.html'));
 });
 
+app.get('/config', (req, res) => {
+  res.sendFile(path.join(__dirname, 'config.html'));
+});
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });

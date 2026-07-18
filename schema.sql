@@ -27,4 +27,16 @@ CREATE TABLE IF NOT EXISTS partidas (
     criado_em TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+DO $$ BEGIN
+  ALTER TABLE partidas ADD COLUMN IF NOT EXISTS modo VARCHAR(20) NOT NULL DEFAULT 'mundo';
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE partidas ADD COLUMN IF NOT EXISTS pais_codigo VARCHAR(5);
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_partidas_usuario_data ON partidas(usuario_id, criado_em);
+CREATE INDEX IF NOT EXISTS idx_partidas_modo ON partidas(modo);
+CREATE INDEX IF NOT EXISTS idx_partidas_pais ON partidas(pais_codigo);

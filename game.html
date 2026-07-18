@@ -13,14 +13,13 @@
       z-index: 1;
     }
     #tela-jogo,
-    #tela-config-jogo,
     #tela-resultado {
       position: relative;
       z-index: 1;
     }
   </style>
 </head>
-<body>
+<body class="game-page">
   <div id="app">
     <div id="hero-streetview"></div>
     <!-- Navbar -->
@@ -65,11 +64,34 @@
           </div>
           <div class="stat-item">
             <span class="stat-value" id="melhor-pontuacao">0</span>
-            <span class="stat-label">Sua Melhor Pontuação</span>
+            <span class="stat-label" id="label-melhor">Sua Melhor (MUNDO)</span>
+          </div>
+          <div class="stat-item hidden" id="stat-melhor-pais">
+            <span class="stat-value" id="melhor-pais">0</span>
+            <span class="stat-label">Seu Melhor no País</span>
           </div>
           <div class="stat-item">
             <span class="stat-value" id="recorde-geral">0</span>
-            <span class="stat-label">Melhor Pontuação Geral</span>
+            <span class="stat-label">Recorde Geral</span>
+          </div>
+        </div>
+        <div id="ranking-section">
+          <div id="ranking-tabs">
+            <button class="ranking-tab active" data-modo="mundo">🌍 MUNDO</button>
+            <button class="ranking-tab" data-modo="pontos-turisticos">🏛️ TURÍSTICOS</button>
+            <button class="ranking-tab" data-modo="paises">🗺️ PAÍSES</button>
+          </div>
+          <div id="ranking-content">
+            <div id="ranking-user-score" class="hidden">
+              <span id="ranking-user-label"></span>
+              <span id="ranking-user-valor"></span>
+            </div>
+            <div id="ranking-loading">Carregando ranking...</div>
+            <div id="ranking-lista" class="hidden"></div>
+            <div id="ranking-erro" class="hidden">Erro ao carregar ranking.</div>
+          </div>
+          <div id="ranking-pais-selector" class="hidden">
+            <select id="ranking-pais-select"></select>
           </div>
         </div>
       </div>
@@ -105,56 +127,6 @@
       </div>
     </div>
 
-    <!-- Tela de Configuração do Jogo -->
-    <div id="tela-config-jogo" class="hidden">
-      <div class="config-jogo-container">
-        <div class="config-jogo-box">
-          <div class="config-jogo-header">
-            <span class="config-jogo-icon">⚙️</span>
-            <h2>Configurar Partida</h2>
-          </div>
-
-          <div class="config-jogo-opcao">
-            <label class="config-jogo-label">TEMPO POR ROUND</label>
-            <div class="config-jogo-opcoes" id="opcao-tempo">
-              <label class="opcao-btn" data-value="0">
-                <input type="radio" name="tempo" value="0" checked>
-                <span>SEM TEMPO</span>
-              </label>
-              <label class="opcao-btn" data-value="120">
-                <input type="radio" name="tempo" value="120">
-                <span>2 MIN.</span>
-              </label>
-              <label class="opcao-btn" data-value="180">
-                <input type="radio" name="tempo" value="180">
-                <span>3 MIN.</span>
-              </label>
-              <label class="opcao-btn" data-value="300">
-                <input type="radio" name="tempo" value="300">
-                <span>5 MIN.</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="config-jogo-opcao">
-            <label class="config-jogo-label">DAR UM ROLEZINHO?</label>
-            <div class="config-jogo-opcoes" id="opcao-rolezinho">
-              <label class="opcao-btn" data-value="sim">
-                <input type="radio" name="rolezinho" value="sim" checked>
-                <span>SIM</span>
-              </label>
-              <label class="opcao-btn" data-value="nao">
-                <input type="radio" name="rolezinho" value="nao">
-                <span>NÃO</span>
-              </label>
-            </div>
-          </div>
-
-          <button id="btn-entrar-jogo" class="btn-primary">ENTRAR NO JOGO</button>
-        </div>
-      </div>
-    </div>
-
     <!-- Tela do Jogo -->
     <div id="tela-jogo" class="hidden">
       <header id="game-header">
@@ -165,6 +137,7 @@
           <div class="round-steps" id="round-steps"></div>
           <div class="round-details" id="round-details">
             <span class="rd-label" id="rd-round-label">Round 01</span>
+            <span class="rd-label hidden" id="rd-atracao"></span>
             <span class="rd-score" id="rd-score">⭐ 0 pts</span>
             <span class="rd-time hidden" id="rd-time">⏱ 0:00</span>
           </div>
@@ -238,6 +211,7 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="config.js"></script>
+  <script src="js/paises.js"></script>
   <script src="js/game.js"></script>
   <script src="js/app.js"></script>
   <script src="js/auth-ui.js"></script>

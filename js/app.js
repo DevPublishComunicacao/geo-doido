@@ -48,7 +48,7 @@ const iconPalpite = L.divIcon({
 function $(id) { return document.getElementById(id); }
 
 function mostrarTela(tela) {
-  ['tela-inicial', 'tela-config-jogo', 'tela-jogo', 'tela-resultado'].forEach(t => {
+  ['tela-inicial', 'tela-jogo', 'tela-resultado'].forEach(t => {
     const el = $(t);
     if (!el) return;
     if (t === tela) {
@@ -59,7 +59,7 @@ function mostrarTela(tela) {
   });
   const navbar = $('#navbar');
   if (navbar) {
-    if (tela === 'tela-jogo' || tela === 'tela-config-jogo' || tela === 'tela-resultado') {
+    if (tela === 'tela-jogo' || tela === 'tela-resultado') {
       navbar.classList.add('hidden');
       document.body.classList.remove('landing-active');
       document.body.style.overflow = 'hidden';
@@ -151,15 +151,7 @@ function initMiniMapa() {
       fullscreenControl: false,
       gestureHandling: 'greedy',
       zoomControl: true,
-      scaleControl: false,
-      styles: [
-        { featureType: 'all', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-        { featureType: 'administrative', elementType: 'labels.text', stylers: [{ visibility: 'off' }] },
-        { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-        { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-        { featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-        { featureType: 'water', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-      ],
+      scaleControl: true,
     });
 
     mapaPalpite.addListener('click', onMiniMapaClick);
@@ -175,9 +167,9 @@ function initMiniMapa() {
       attributionControl: true,
     }).setView([20, 0], 2);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/">CARTO</a>',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(mapaPalpite);
 
     L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(mapaPalpite);
@@ -273,6 +265,7 @@ function initStreetView(lat, lng) {
           showRoadLabels: false,
           visible: true,
           zoomControl: false,
+          disableDefaultUI: true,
           ...rolezinhoOpts,
         });
       } catch (e) {
@@ -493,6 +486,14 @@ function iniciarRodada() {
   $('btn-palpite').disabled = true;
   $('btn-proxima').classList.add('hidden');
   $('palpite-info').classList.add('hidden');
+
+  var elAtracao = $('rd-atracao');
+  if (configModo === 'pontos-turisticos' && local.nome) {
+    elAtracao.textContent = '🏛️ ' + local.nome;
+    elAtracao.classList.remove('hidden');
+  } else if (elAtracao) {
+    elAtracao.classList.add('hidden');
+  }
 
   initStreetView(local.lat, local.lng);
 
@@ -724,9 +725,16 @@ function mostrarResultado() {
 }
 
 function carregarStats() {
+  var labelEl = $('label-melhor');
+  var statPaisEl = $('stat-melhor-pais');
+  var isPaises = configModo === 'paises';
+  var modoLabel = { mundo: 'MUNDO', paises: 'PAÍSES', 'pontos-turisticos': 'PONTOS TURÍSTICOS' }[configModo] || 'MUNDO';
+  if (labelEl) labelEl.textContent = 'Sua Melhor (' + modoLabel + ')';
+  if (statPaisEl) statPaisEl.classList.toggle('hidden', !isPaises);
+
   const token = localStorage.getItem('geo-doido-token');
   if (token) {
-    fetch('/api/auth/stats', {
+    fetch('/api/auth/stats?modo=' + configModo, {
       headers: { 'Authorization': 'Bearer ' + token }
     })
       .then(function(r) { return r.json(); })
@@ -737,8 +745,20 @@ function carregarStats() {
         if (elMelhor) elMelhor.textContent = data.melhor_pontuacao.toLocaleString('pt-BR');
       })
       .catch(function() {});
+
+    if (isPaises && configPaisCodigo) {
+      fetch('/api/auth/stats/pais/' + configPaisCodigo, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var elPais = $('melhor-pais');
+          if (elPais) elPais.textContent = data.melhor_pontuacao.toLocaleString('pt-BR');
+        })
+        .catch(function() {});
+    }
   }
-  fetch('/api/auth/recorde-geral')
+  fetch('/api/auth/recorde-geral?modo=' + configModo)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       var el = $('recorde-geral');
@@ -754,7 +774,7 @@ async function iniciarJogo() {
   temposRodada = [];
 
   try {
-    await jogo.iniciarJogo();
+    await jogo.iniciarJogo(configPais, configModo);
     $('loading-overlay').classList.add('hidden');
     initMiniMapa();
     buildRoundTracker();
@@ -794,17 +814,37 @@ function voltarMenu() {
 }
 
 function tentarIniciarJogo() {
-  mostrarTela('tela-config-jogo');
-  $('opcao-tempo').querySelector('[data-value="0"] input').checked = true;
-  $('opcao-rolezinho').querySelector('[data-value="sim"] input').checked = true;
+  window.location.href = '/config';
 }
 
-function lerConfigJogo() {
-  const tempoEl = $('opcao-tempo').querySelector('input[name="tempo"]:checked');
-  const rolezinhoEl = $('opcao-rolezinho').querySelector('input[name="rolezinho"]:checked');
-  configTempoRodada = parseInt(tempoEl ? tempoEl.value : 0);
-  configRolezinho = rolezinhoEl ? rolezinhoEl.value === 'sim' : true;
-  return true;
+let configPais = null;
+let configModo = 'mundo';
+let configPaisCodigo = null;
+
+function lerConfigStorage() {
+  const stored = sessionStorage.getItem('geo-doido-config');
+  configPais = null;
+  configModo = 'mundo';
+  configPaisCodigo = null;
+  if (stored) {
+    try {
+      const cfg = JSON.parse(stored);
+      configTempoRodada = cfg.tempo || 0;
+      configRolezinho = cfg.rolezinho !== undefined ? cfg.rolezinho : true;
+      configModo = cfg.modo === 'paises' || cfg.modo === 'pontos-turisticos' ? cfg.modo : 'mundo';
+      if (configModo === 'paises' && cfg.paisCodigo && typeof getPaisPorCodigo === 'function') {
+        configPais = getPaisPorCodigo(cfg.paisCodigo);
+        configPaisCodigo = cfg.paisCodigo;
+      }
+    } catch (e) {
+      configTempoRodada = 0;
+      configRolezinho = true;
+    }
+    sessionStorage.removeItem('geo-doido-config');
+  } else {
+    configTempoRodada = 0;
+    configRolezinho = true;
+  }
 }
 
 function detectarTablet() {
@@ -820,7 +860,7 @@ function autoFullscreen() {
 }
 
 function entrarJogo() {
-  lerConfigJogo();
+  lerConfigStorage();
   carregarGoogleMaps(() => {
     iniciarJogo();
     autoFullscreen();
@@ -834,13 +874,174 @@ async function salvarPartida(pontuacao) {
     await fetch('/api/auth/save-game', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ pontuacao }),
+      body: JSON.stringify({ pontuacao, modo: configModo, paisCodigo: configPaisCodigo }),
     });
   } catch (e) {}
 }
 
+/* Ranking */
+var rankingModoAtual = 'mundo';
+var rankingPaisAtual = null;
+
+function getUsuarioLogado() {
+  try {
+    return JSON.parse(localStorage.getItem('geo-doido-usuario') || 'null');
+  } catch(e) { return null; }
+}
+
+function renderRanking(jogadores) {
+  var container = $('ranking-lista');
+  var loading = $('ranking-loading');
+  var erro = $('ranking-erro');
+  var usuario = getUsuarioLogado();
+  container.innerHTML = '';
+  if (!jogadores || jogadores.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:2rem;color:#888;font-size:0.85rem;">Nenhum jogador encontrado.</div>';
+    container.classList.remove('hidden');
+    loading.classList.add('hidden');
+    erro.classList.add('hidden');
+    return;
+  }
+  jogadores.forEach(function(j, i) {
+    var pos = i + 1;
+    var div = document.createElement('div');
+    var ehUsuario = usuario && j.nome === usuario.nome;
+    div.className = 'ranking-item' + (ehUsuario ? ' ranking-destaque' : '');
+    var posClass = pos === 1 ? 'top1' : pos === 2 ? 'top2' : pos === 3 ? 'top3' : '';
+    var avatarHtml = j.avatar_url
+      ? '<img class="ranking-avatar" src="' + j.avatar_url + '" alt="">'
+      : '<div class="ranking-avatar"></div>';
+    var nomeExtra = ehUsuario ? ' <span class="ranking-voce">(você)</span>' : '';
+    div.innerHTML =
+      '<span class="ranking-pos ' + posClass + '">' + pos + 'º</span>' +
+      avatarHtml +
+      '<div class="ranking-info">' +
+        '<div class="ranking-nome">' + j.nome + nomeExtra + '</div>' +
+        '<div class="ranking-partidas">' + j.partidas + ' partidas</div>' +
+      '</div>' +
+      '<span class="ranking-pontos">' + j.melhor_pontuacao.toLocaleString('pt-BR') + '</span>';
+    container.appendChild(div);
+  });
+  container.classList.remove('hidden');
+  loading.classList.add('hidden');
+  erro.classList.add('hidden');
+}
+
+function carregarUserScore() {
+  var token = localStorage.getItem('geo-doido-token');
+  var labelEl = $('ranking-user-label');
+  var valorEl = $('ranking-user-valor');
+  var scoreEl = $('ranking-user-score');
+  if (!token || !labelEl || !valorEl || !scoreEl) return;
+  scoreEl.classList.add('hidden');
+
+  if (rankingModoAtual === 'paises') {
+    var paisCod = $('ranking-pais-select') ? $('ranking-pais-select').value : '';
+    if (paisCod) {
+      fetch('/api/auth/stats/pais/' + paisCod, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          labelEl.textContent = 'Sua Melhor no País';
+          valorEl.textContent = data.melhor_pontuacao.toLocaleString('pt-BR');
+          scoreEl.classList.remove('hidden');
+        })
+        .catch(function() {});
+      return;
+    }
+  }
+
+  fetch('/api/auth/stats?modo=' + rankingModoAtual, {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var modoLabelRank = { mundo: 'MUNDO', paises: 'PAÍSES', 'pontos-turisticos': 'PONTOS TURÍSTICOS' }[rankingModoAtual] || 'MUNDO';
+      labelEl.textContent = 'Sua Melhor (' + modoLabelRank + ')';
+      valorEl.textContent = data.melhor_pontuacao.toLocaleString('pt-BR');
+      scoreEl.classList.remove('hidden');
+    })
+    .catch(function() {});
+}
+
+function carregarRanking() {
+  var loading = $('ranking-loading');
+  var lista = $('ranking-lista');
+  var erro = $('ranking-erro');
+  loading.classList.remove('hidden');
+  lista.classList.add('hidden');
+  erro.classList.add('hidden');
+  var paisSelector = $('ranking-pais-selector');
+  paisSelector.classList.add('hidden');
+
+  if (rankingModoAtual === 'paises') {
+    fetch('/api/auth/ranking/paises')
+      .then(function(r) { return r.json(); })
+      .then(function(paises) {
+        var select = $('ranking-pais-select');
+        select.innerHTML = '<option value="">-- Ranking Geral PAÍSES --</option>';
+        paises.forEach(function(p) {
+          var opt = document.createElement('option');
+          opt.value = p.pais_codigo;
+          var paisObj = typeof PAISES !== 'undefined' ? PAISES.find(function(x) { return x.codigo === p.pais_codigo; }) : null;
+          opt.textContent = paisObj ? paisObj.nome + ' 🏆' : p.pais_codigo;
+          select.appendChild(opt);
+        });
+        paisSelector.classList.remove('hidden');
+      })
+      .catch(function() {});
+
+    fetch('/api/auth/ranking/global?modo=paises&limit=20')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        renderRanking(data);
+        carregarUserScore();
+      })
+      .catch(function() {
+        loading.classList.add('hidden');
+        erro.classList.remove('hidden');
+      });
+  } else {
+    fetch('/api/auth/ranking/global?modo=' + rankingModoAtual + '&limit=20')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        renderRanking(data);
+        carregarUserScore();
+      })
+      .catch(function() {
+        loading.classList.add('hidden');
+        erro.classList.remove('hidden');
+      });
+  }
+}
+
+function carregarRankingPais(codigo) {
+  if (!codigo) {
+    carregarRanking();
+    return;
+  }
+  var loading = $('ranking-loading');
+  var lista = $('ranking-lista');
+  var erro = $('ranking-erro');
+  loading.classList.remove('hidden');
+  lista.classList.add('hidden');
+  erro.classList.add('hidden');
+  fetch('/api/auth/ranking/pais/' + codigo + '?limit=20')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      renderRanking(data);
+      carregarUserScore();
+    })
+    .catch(function() {
+      loading.classList.add('hidden');
+      erro.classList.remove('hidden');
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   carregarStats();
+  carregarRanking();
 
   $('btn-jogar').addEventListener('click', tentarIniciarJogo);
 
@@ -863,6 +1064,27 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-sair').addEventListener('click', voltarMenu);
   $('btn-jogar-novamente').addEventListener('click', tentarIniciarJogo);
   $('btn-voltar-menu').addEventListener('click', voltarMenu);
-  $('btn-entrar-jogo').addEventListener('click', entrarJogo);
   $('btn-voltar-inicio').addEventListener('click', voltarAoInicio);
+
+  var tabs = document.querySelectorAll('.ranking-tab');
+  tabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      rankingModoAtual = tab.dataset.modo;
+      carregarRanking();
+    });
+  });
+
+  var paisSelect = $('ranking-pais-select');
+  if (paisSelect) {
+    paisSelect.addEventListener('change', function() {
+      carregarRankingPais(this.value);
+    });
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('start') === '1') {
+    entrarJogo();
+  }
 });

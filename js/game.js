@@ -28,6 +28,12 @@ function gerarCoordenadaAleatoria(bounds) {
   return { lat, lng };
 }
 
+function gerarCoordenadaProximidade(centro, raioKm) {
+  const lat = centro.lat + (Math.random() - 0.5) * (raioKm / 111) * 2;
+  const lng = centro.lng + (Math.random() - 0.5) * (raioKm / 111) * 2 / Math.cos(centro.lat * Math.PI / 180);
+  return { lat, lng };
+}
+
 function obterNomeLocal(lat, lng) {
   return `Local desconhecido (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
 }
@@ -43,10 +49,12 @@ class JogoGeoDoido {
     this.streetViewService = null;
   }
 
-  async iniciarJogo() {
+  async iniciarJogo(pais, modo) {
     this.pontuacao = 0;
     this.rodadaAtual = 0;
     this.palpites = [];
+    this.pais = pais || null;
+    this.modo = modo || 'mundo';
     
     if (typeof google !== 'undefined' && google.maps && google.maps.StreetViewService) {
       this.streetViewService = new google.maps.StreetViewService();
@@ -66,8 +74,30 @@ class JogoGeoDoido {
     while (locais.length < quantidade && tentativas < tentativasMax) {
       tentativas++;
       
-      const regiao = REGIOES_STREET_VIEW[Math.floor(Math.random() * REGIOES_STREET_VIEW.length)];
-      const coords = gerarCoordenadaAleatoria(regiao.bounds);
+      let coords;
+      let regiao;
+      let nomeLocal;
+
+      if (this.modo === 'pontos-turisticos') {
+        const idx = Math.floor(Math.random() * PAISES.length);
+        const pais = PAISES[idx];
+        const atracoes = pais.atracoes || [{ nome: pais.atracao || 'Desconhecido', lat: pais.lat, lng: pais.lng }];
+        const atracao = atracoes[Math.floor(Math.random() * atracoes.length)];
+        coords = { lat: atracao.lat, lng: atracao.lng };
+        regiao = { nome: pais.nome, bounds: pais.bounds };
+        nomeLocal = atracao.nome;
+      } else if (this.pais) {
+        const raio = Math.min(200, Math.max(30, (this.pais.bounds.latMax - this.pais.bounds.latMin) * 50));
+        const atr = this.pais.atracoes && this.pais.atracoes[0] ? this.pais.atracoes[0] : { lat: 0, lng: 0 };
+        coords = gerarCoordenadaProximidade({ lat: atr.lat, lng: atr.lng }, raio);
+        regiao = { nome: this.pais.nome, bounds: this.pais.bounds };
+        nomeLocal = obterNomeLocal(coords.lat, coords.lng);
+      } else {
+        const regioes = REGIOES_STREET_VIEW;
+        regiao = regioes[Math.floor(Math.random() * regioes.length)];
+        coords = gerarCoordenadaAleatoria(regiao.bounds);
+        nomeLocal = obterNomeLocal(coords.lat, coords.lng);
+      }
       
       pendentes.push(
         this.verificarCoberturaStreetView(coords.lat, coords.lng).then(tem => {
@@ -79,8 +109,8 @@ class JogoGeoDoido {
               locais.push({
                 lat: coords.lat,
                 lng: coords.lng,
-                nome: obterNomeLocal(coords.lat, coords.lng),
-                desc: `${regiao.nome} - Coordenadas aleatórias`
+                nome: nomeLocal,
+                desc: `${regiao.nome} - ${nomeLocal}`
               });
             }
           }
@@ -129,7 +159,9 @@ class JogoGeoDoido {
     if (!local) return null;
 
     const distancia = this.calcularDistancia(lat, lng, local.lat, local.lng);
-    const pontos = this.calcularPontos(distancia);
+    const pontos = this.pais
+      ? this.calcularPontosPaises(distancia)
+      : this.calcularPontos(distancia);
 
     const resultado = {
       local,
@@ -170,6 +202,12 @@ class JogoGeoDoido {
   calcularPontos(distancia) {
     if (distancia < 0.01) return 5000;
     return Math.round(5000 * Math.exp(-distancia / 2000));
+  }
+
+  calcularPontosPaises(distancia) {
+    if (distancia < 0.01) return 5000;
+    if (distancia < 1) return Math.round(5000 - distancia * 500);
+    return Math.max(1, Math.round(5000 * Math.exp(-distancia / 20)));
   }
 
   getDistanciaLabel(distancia) {
