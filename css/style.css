@@ -232,29 +232,35 @@ body.landing-active {
 }
 
 .fullscreen-mode #game-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   background: transparent !important;
   backdrop-filter: none !important;
   border-bottom: none !important;
   padding: 6px 12px;
+  z-index: 1000;
   pointer-events: none;
 }
 .fullscreen-mode #game-header .game-title {
   font-size: 0.9rem;
   color: rgba(255,255,255,0.5);
+  -webkit-text-fill-color: rgba(255,255,255,0.5);
 }
 .fullscreen-mode #round-tracker {
-  display: flex !important;
   flex-direction: row;
-  align-items: center;
-  gap: 12px;
-  margin-left: auto;
-  margin-right: 0;
+  gap: 10px;
   background: rgba(0,0,0,0.5);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 8px;
-  padding: 6px 12px;
+  padding: 5px 10px;
   pointer-events: auto;
+  margin-left: auto;
+  margin-right: 8px;
+  height: auto;
+  min-height: 0;
 }
 .fullscreen-mode #round-tracker .round-steps {
   display: flex;
@@ -306,6 +312,10 @@ body.landing-active {
   font-size: 0.68rem;
 }
 .fullscreen-mode .header-actions {
+  pointer-events: auto;
+  margin-left: auto;
+}
+.fullscreen-mode .header-left {
   pointer-events: auto;
 }
 .fullscreen-mode #fs-header {
@@ -472,6 +482,7 @@ body.landing-active {
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 /* Round Tracker */
@@ -482,12 +493,6 @@ body.landing-active {
   gap: 2px;
   margin-left: auto;
   margin-right: 12px;
-}
-.tracker-divider {
-  width: 1px;
-  height: 24px;
-  background: rgba(255,255,255,0.12);
-  flex-shrink: 0;
 }
 
 .round-steps {
