@@ -434,8 +434,10 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
 
       res.redirect(`/login.html?token=${token}&nome=${encodeURIComponent(user.nome)}&r=/game`);
     } catch (err) {
-      console.error('=== GOOGLE AUTH ERROR ===', err?.message, err?.stack);
-      res.redirect('/login.html?erro=google_interno');
+      const msg = err?.message || 'unknown';
+      const stack = (err?.stack || '').slice(0, 300);
+      console.error('=== GOOGLE AUTH ERROR ===', msg, stack);
+      res.redirect(`/login.html?erro=google_interno&d=${encodeURIComponent(msg)}`);
     }
   });
 } else {

@@ -114,7 +114,8 @@
         'google_userinfo': 'Erro ao obter perfil do Google.',
         'google_interno': 'Erro interno na autenticação Google.',
       };
-      mostrarErro(msgs[erro] || 'Erro desconhecido.');
+      var detalhe = params.get('d');
+      mostrarErro((msgs[erro] || 'Erro desconhecido.') + (detalhe ? ' (' + detalhe + ')' : ''));
     }
 
     if (window.location.hash === '#register') {
