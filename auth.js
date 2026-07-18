@@ -1,9 +1,9 @@
 const express = require('express');
+const https = require('https');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const passport = require('passport');
-
 const db = require('./db');
 const router = express.Router();
 
@@ -364,6 +364,28 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
     res.redirect(`${authUrlBase}?${params.toString()}`);
   });
 
+  function httpsJson(method, url, headers, body) {
+    return new Promise((resolve, reject) => {
+      const u = new URL(url);
+      const opts = {
+        hostname: u.hostname, path: u.pathname + u.search,
+        method, headers: { ...headers },
+      };
+      if (body) opts.headers['Content-Length'] = Buffer.byteLength(body);
+      const req = https.request(opts, (res) => {
+        let data = '';
+        res.on('data', c => data += c);
+        res.on('end', () => {
+          try { resolve({ status: res.statusCode, body: JSON.parse(data) }); }
+          catch { resolve({ status: res.statusCode, body: data }); }
+        });
+      });
+      req.on('error', reject);
+      if (body) req.write(body);
+      req.end();
+    });
+  }
+
   router.get('/api/auth/google/callback', async (req, res) => {
     try {
       const { code, state } = req.query;
@@ -372,45 +394,40 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
         return res.redirect('/login.html?erro=google_no_code');
       }
       if (state !== req.session.googleState) {
+        console.log('=== STATE MISMATCH === session:', req.session.googleState, 'query:', state);
         return res.redirect('/login.html?erro=google_invalid_state');
       }
 
       const callbackURL = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+      console.log('=== TOKEN EXCHANGE === callbackURL:', callbackURL);
 
       // Troca código por token
-      const tokenResp = await fetch(tokenUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          code,
-          client_id: GOOGLE_CLIENT_ID,
-          client_secret: GOOGLE_CLIENT_SECRET,
-          redirect_uri: callbackURL,
-          grant_type: 'authorization_code',
-        }).toString(),
-      });
+      const tokenResp = await httpsJson('POST', tokenUrl,
+        { 'Content-Type': 'application/x-www-form-urlencoded' },
+        new URLSearchParams({
+          code, client_id: GOOGLE_CLIENT_ID, client_secret: GOOGLE_CLIENT_SECRET,
+          redirect_uri: callbackURL, grant_type: 'authorization_code',
+        }).toString()
+      );
 
-      if (!tokenResp.ok) {
-        const errBody = await tokenResp.text();
-        console.error('=== GOOGLE TOKEN ERROR ===', tokenResp.status, errBody);
+      if (tokenResp.status !== 200) {
+        console.error('=== GOOGLE TOKEN ERROR ===', tokenResp.status, JSON.stringify(tokenResp.body));
         return res.redirect('/login.html?erro=google_token');
       }
 
-      const tokenData = await tokenResp.json();
-      const accessToken = tokenData.access_token;
+      const accessToken = tokenResp.body.access_token;
 
       // Busca perfil do usuário
-      const userResp = await fetch(userInfoUrl, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const userResp = await httpsJson('GET', userInfoUrl,
+        { Authorization: `Bearer ${accessToken}` }
+      );
 
-      if (!userResp.ok) {
-        console.error('=== GOOGLE USER INFO ERROR ===', userResp.status);
+      if (userResp.status !== 200) {
+        console.error('=== GOOGLE USER INFO ERROR ===', userResp.status, JSON.stringify(userResp.body));
         return res.redirect('/login.html?erro=google_userinfo');
       }
 
-      const profile = await userResp.json();
-      const user = await findOrCreateGoogleUser(profile);
+      const user = await findOrCreateGoogleUser(userResp.body);
       const token = gerarToken(user);
 
       res.redirect(`/login.html?token=${token}&nome=${encodeURIComponent(user.nome)}&r=/game`);
