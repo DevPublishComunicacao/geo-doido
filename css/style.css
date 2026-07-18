@@ -233,6 +233,7 @@ body.landing-active {
 
 .fullscreen-mode #game-header {
   background: transparent !important;
+  backdrop-filter: none !important;
   border-bottom: none !important;
   padding: 6px 12px;
 }
