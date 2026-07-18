@@ -59,13 +59,14 @@ function mostrarTela(tela) {
   });
   const navbar = $('#navbar');
   if (navbar) {
-    if (tela === 'tela-inicial') {
+    if (tela === 'tela-jogo' || tela === 'tela-resultado') {
+      navbar.classList.add('hidden');
+      document.body.classList.remove('landing-active');
+      document.body.style.overflow = 'hidden';
+    } else {
       navbar.classList.remove('hidden');
       document.body.classList.add('landing-active');
       document.body.style.overflow = '';
-    } else {
-      document.body.classList.remove('landing-active');
-      document.body.style.overflow = 'hidden';
     }
   }
 }
