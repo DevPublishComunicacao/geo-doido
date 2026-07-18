@@ -1,4 +1,4 @@
-const initSQLite = require('./db-sqlite');
+const initJson = require('./db-sqlite');
 
 const DB_URL = process.env.DATABASE_URL
   || (process.env.DB_HOST ? `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}` : null);
@@ -20,11 +20,12 @@ async function init() {
       console.log('Banco: PostgreSQL conectado');
       return;
     } catch (err) {
-      console.error('PostgreSQL indisponível, fallback para SQLite:', err.message);
+      console.error('PostgreSQL indisponível, fallback para JSON:', err.message);
     }
   }
 
-  db = await initSQLite();
+  db = { query: (text, params) => initJson.query(text, params), type: 'json' };
+  console.log('Banco: JSON (' + require('path').join(__dirname, 'geodoido.json') + ')');
 }
 
 async function query(text, params) {
