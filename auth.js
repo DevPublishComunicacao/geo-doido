@@ -372,6 +372,7 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
       const opts = {
         hostname: u.hostname, path: u.pathname + u.search,
         method, headers: { ...headers },
+        timeout: 10000,
       };
       if (body) opts.headers['Content-Length'] = Buffer.byteLength(body);
       const req = https.request(opts, (res) => {
@@ -383,6 +384,7 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
         });
       });
       req.on('error', reject);
+      req.on('timeout', () => { req.destroy(new Error('Request timeout')); });
       if (body) req.write(body);
       req.end();
     });
@@ -434,10 +436,17 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
 
       res.redirect(`/login.html?token=${token}&nome=${encodeURIComponent(user.nome)}&r=/game`);
     } catch (err) {
-      const msg = err?.message || 'unknown';
-      const stack = (err?.stack || '').slice(0, 300);
-      console.error('=== GOOGLE AUTH ERROR ===', msg, stack);
-      res.redirect(`/login.html?erro=google_interno&d=${encodeURIComponent(msg)}`);
+      const detalhe = JSON.stringify({
+        typeof: typeof err,
+        isError: err instanceof Error,
+        message: err?.message,
+        code: err?.code,
+        name: err?.name,
+        stack: (err?.stack || '').slice(0, 300),
+        string: err?.toString ? err.toString() : '' + err,
+      });
+      console.error('=== GOOGLE AUTH ERROR ===', detalhe);
+      res.redirect(`/login.html?erro=google_interno&d=${encodeURIComponent(detalhe.slice(0, 500))}`);
     }
   });
 } else {
