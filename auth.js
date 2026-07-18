@@ -317,6 +317,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use('google', new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: '/api/auth/google/callback',
+    proxy: true,
   }, async (accessToken, refreshToken, profile, done) => {
     try {
       const googleId = profile.id;
@@ -364,17 +366,12 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 }
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  const googleCallbackURL = (req) => `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
-
   // Iniciar login Google
   router.get('/api/auth/google',
     (req, res, next) => {
-      const cbURL = googleCallbackURL(req);
-      console.log('=== GOOGLE INIT === protocol:', req.protocol, 'host:', req.get('host'), 'callbackURL:', cbURL);
       passport.authenticate('google', {
         scope: ['profile', 'email'],
         session: false,
-        callbackURL: cbURL,
       })(req, res, next);
     }
   );
@@ -382,23 +379,13 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   // Callback do Google
   router.get('/api/auth/google/callback',
     (req, res, next) => {
-      passport.authenticate('google', {
-        session: false,
-        failureRedirect: '/login.html?erro=google',
-        callbackURL: googleCallbackURL(req),
-      })(req, res, next);
+      passport.authenticate('google', { session: false, failureRedirect: '/login.html?erro=google' })(req, res, next);
     },
     (req, res) => {
       const token = gerarToken(req.user);
       res.redirect(`/login.html?token=${token}&nome=${encodeURIComponent(req.user.nome)}&r=/game`);
     }
   );
-
-  // Tratamento de erro do passport (Google OAuth)
-  router.use('/api/auth/google', (err, req, res, next) => {
-    console.error('=== GOOGLE AUTH ERROR ===', err?.message, err?.stack);
-    res.status(500).json({ erro: 'Falha na autenticação Google', detalhe: err?.message });
-  });
 }
 
 // RANKINGS
