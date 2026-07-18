@@ -232,6 +232,14 @@ body.landing-active {
 }
 
 .fullscreen-mode #game-header {
+  background: transparent !important;
+  border-bottom: none !important;
+  padding: 6px 12px;
+}
+.fullscreen-mode #game-header .game-title {
+  font-size: 0.9rem;
+}
+.fullscreen-mode #round-tracker {
   display: none !important;
 }
 
