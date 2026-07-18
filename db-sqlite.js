@@ -90,16 +90,27 @@ async function initSQLite() {
       const table = getTableFromInsert(sql);
       const cols = extractReturningCols(sql);
       const cleanSql = stripReturning(converted);
-      db.run(cleanSql, params);
+      try {
+        db.run(cleanSql, params);
+      } catch (e) {
+        console.error('=== SQLITE INSERT ERROR ===', cleanSql, JSON.stringify(params), e.message);
+        throw e;
+      }
       save();
 
       const lastId = db.exec('SELECT last_insert_rowid() AS id');
-      if (!table || !lastId.length) return { rows: [] };
+      if (!table || !lastId || !lastId.length) {
+        throw new Error('Falha ao obter último ID inserido');
+      }
 
       const id = lastId[0].values[0][0];
+      if (!id) throw new Error('INSERT não gerou ID');
+
       const colList = cols ? cols.join(',') : '*';
       const rowResult = db.exec(`SELECT ${colList} FROM ${table} WHERE id = ${id}`);
-      if (!rowResult.length) return { rows: [] };
+      if (!rowResult || !rowResult.length) {
+        throw new Error(`Registro inserido mas não encontrado (id=${id})`);
+      }
 
       const r = rowResult[0];
       const obj = {};
@@ -111,14 +122,23 @@ async function initSQLite() {
       const stmt = db.prepare(converted);
       if (params && params.length > 0) stmt.bind(params);
       const rows = [];
-      while (stmt.step()) {
+      let err;
+      while (true) {
+        try { if (!stmt.step()) break; }
+        catch (e) { err = e; break; }
         rows.push(stmt.getAsObject());
       }
       stmt.free();
+      if (err) throw err;
       return { rows };
     }
 
-    db.run(converted, params);
+    try {
+      db.run(converted, params);
+    } catch (e) {
+      console.error('=== SQLITE EXEC ERROR ===', converted, JSON.stringify(params), e.message);
+      throw e;
+    }
     save();
     return { rows: [] };
   }

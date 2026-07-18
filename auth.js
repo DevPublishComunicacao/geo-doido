@@ -318,14 +318,19 @@ const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
 async function findOrCreateGoogleUser(profile) {
   const googleId = profile.id;
-  const email = profile.email || `${googleId}@google.com`;
+  const email = (profile.email || googleId + '@google.com').toLowerCase();
   const nome = profile.name || 'Usuário Google';
   const avatarUrl = profile.picture || null;
+
+  if (!googleId) {
+    console.error('=== GOOGLE PROFILE SEM ID ===', JSON.stringify(profile));
+    throw new Error('Perfil Google não contém ID');
+  }
 
   let result = await db.query('SELECT id, nome, email, avatar_url FROM usuarios WHERE google_id = $1', [googleId]);
   if (result.rows.length > 0) return result.rows[0];
 
-  result = await db.query('SELECT id, nome, email, avatar_url FROM usuarios WHERE email = $1', [email.toLowerCase()]);
+  result = await db.query('SELECT id, nome, email, avatar_url FROM usuarios WHERE email = $1', [email]);
   if (result.rows.length > 0) {
     await db.query('UPDATE usuarios SET google_id = $1, avatar_url = COALESCE($2, avatar_url) WHERE id = $3',
       [googleId, avatarUrl, result.rows[0].id]);
@@ -336,8 +341,14 @@ async function findOrCreateGoogleUser(profile) {
     `INSERT INTO usuarios (nome, email, google_id, avatar_url)
      VALUES ($1, $2, $3, $4)
      RETURNING id, nome, email, avatar_url`,
-    [nome, email.toLowerCase(), googleId, avatarUrl]
+    [nome, email, googleId, avatarUrl]
   );
+
+  if (!result.rows || result.rows.length === 0) {
+    console.error('=== INSERT USUARIO FALHOU ===', JSON.stringify({ nome, email, googleId }));
+    throw new Error('Falha ao criar usuário no banco');
+  }
+
   return result.rows[0];
 }
 
