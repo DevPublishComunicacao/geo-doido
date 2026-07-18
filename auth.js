@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
+
 const db = require('./db');
 const router = express.Router();
 
@@ -313,79 +313,120 @@ router.get('/api/auth/me', authMiddleware, async (req, res) => {
 
 // --- GOOGLE OAUTH ---
 
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  passport.use('google', new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: '/api/auth/google/callback',
-    proxy: true,
-  }, async (accessToken, refreshToken, profile, done) => {
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+
+async function findOrCreateGoogleUser(profile) {
+  const googleId = profile.id;
+  const email = profile.email || `${googleId}@google.com`;
+  const nome = profile.name || 'Usuário Google';
+  const avatarUrl = profile.picture || null;
+
+  let result = await db.query('SELECT id, nome, email, avatar_url FROM usuarios WHERE google_id = $1', [googleId]);
+  if (result.rows.length > 0) return result.rows[0];
+
+  result = await db.query('SELECT id, nome, email, avatar_url FROM usuarios WHERE email = $1', [email.toLowerCase()]);
+  if (result.rows.length > 0) {
+    await db.query('UPDATE usuarios SET google_id = $1, avatar_url = COALESCE($2, avatar_url) WHERE id = $3',
+      [googleId, avatarUrl, result.rows[0].id]);
+    return result.rows[0];
+  }
+
+  result = await db.query(
+    `INSERT INTO usuarios (nome, email, google_id, avatar_url)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id, nome, email, avatar_url`,
+    [nome, email.toLowerCase(), googleId, avatarUrl]
+  );
+  return result.rows[0];
+}
+
+if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
+  const scopes = ['openid', 'profile', 'email'];
+  const authUrlBase = 'https://accounts.google.com/o/oauth2/v2/auth';
+  const tokenUrl = 'https://oauth2.googleapis.com/token';
+  const userInfoUrl = 'https://www.googleapis.com/oauth2/v2/userinfo';
+
+  router.get('/api/auth/google', (req, res) => {
+    const callbackURL = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+    const state = crypto.randomBytes(16).toString('hex');
+    req.session.googleState = state;
+
+    const params = new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      redirect_uri: callbackURL,
+      response_type: 'code',
+      scope: scopes.join(' '),
+      state,
+      access_type: 'online',
+    });
+
+    res.redirect(`${authUrlBase}?${params.toString()}`);
+  });
+
+  router.get('/api/auth/google/callback', async (req, res) => {
     try {
-      const googleId = profile.id;
-      const email = profile.emails?.[0]?.value || `${googleId}@google.com`;
-      const nome = profile.displayName || 'Usuário Google';
-      const avatarUrl = profile.photos?.[0]?.value || null;
+      const { code, state } = req.query;
 
-      // Tenta achar usuário pelo google_id
-      let result = await db.query('SELECT id, nome, email, avatar_url FROM usuarios WHERE google_id = $1', [googleId]);
-      if (result.rows.length > 0) {
-        return done(null, result.rows[0]);
+      if (!code) {
+        return res.redirect('/login.html?erro=google_no_code');
+      }
+      if (state !== req.session.googleState) {
+        return res.redirect('/login.html?erro=google_invalid_state');
       }
 
-      // Tenta achar pelo email
-      result = await db.query('SELECT id, nome, email, avatar_url FROM usuarios WHERE email = $1', [email.toLowerCase()]);
-      if (result.rows.length > 0) {
-        // Vincula o google_id à conta existente
-        await db.query('UPDATE usuarios SET google_id = $1, avatar_url = COALESCE($2, avatar_url) WHERE id = $3',
-          [googleId, avatarUrl, result.rows[0].id]);
-        return done(null, result.rows[0]);
+      const callbackURL = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+
+      // Troca código por token
+      const tokenResp = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          code,
+          client_id: GOOGLE_CLIENT_ID,
+          client_secret: GOOGLE_CLIENT_SECRET,
+          redirect_uri: callbackURL,
+          grant_type: 'authorization_code',
+        }).toString(),
+      });
+
+      if (!tokenResp.ok) {
+        const errBody = await tokenResp.text();
+        console.error('=== GOOGLE TOKEN ERROR ===', tokenResp.status, errBody);
+        return res.redirect('/login.html?erro=google_token');
       }
 
-      // Cria novo usuário
-      result = await db.query(
-        `INSERT INTO usuarios (nome, email, google_id, avatar_url)
-         VALUES ($1, $2, $3, $4)
-         RETURNING id, nome, email, avatar_url`,
-        [nome, email.toLowerCase(), googleId, avatarUrl]
-      );
+      const tokenData = await tokenResp.json();
+      const accessToken = tokenData.access_token;
 
-      done(null, result.rows[0]);
+      // Busca perfil do usuário
+      const userResp = await fetch(userInfoUrl, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      if (!userResp.ok) {
+        console.error('=== GOOGLE USER INFO ERROR ===', userResp.status);
+        return res.redirect('/login.html?erro=google_userinfo');
+      }
+
+      const profile = await userResp.json();
+      const user = await findOrCreateGoogleUser(profile);
+      const token = gerarToken(user);
+
+      res.redirect(`/login.html?token=${token}&nome=${encodeURIComponent(user.nome)}&r=/game`);
     } catch (err) {
-      done(err, null);
+      console.error('=== GOOGLE AUTH ERROR ===', err?.message, err?.stack);
+      res.redirect('/login.html?erro=google_interno');
     }
-  }));
+  });
 } else {
   console.warn('Google OAuth não configurado. Defina GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET.');
-  // Rotas dummy quando Google não configurado
   router.get('/api/auth/google', (req, res) => {
     res.redirect('/login.html?erro=google_not_configured');
   });
   router.get('/api/auth/google/callback', (req, res) => {
     res.redirect('/login.html?erro=google_not_configured');
   });
-}
-
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  // Iniciar login Google
-  router.get('/api/auth/google',
-    (req, res, next) => {
-      passport.authenticate('google', {
-        scope: ['profile', 'email'],
-        session: false,
-      })(req, res, next);
-    }
-  );
-
-  // Callback do Google
-  router.get('/api/auth/google/callback',
-    (req, res, next) => {
-      passport.authenticate('google', { session: false, failureRedirect: '/login.html?erro=google' })(req, res, next);
-    },
-    (req, res) => {
-      const token = gerarToken(req.user);
-      res.redirect(`/login.html?token=${token}&nome=${encodeURIComponent(req.user.nome)}&r=/game`);
-    }
-  );
 }
 
 // RANKINGS
