@@ -795,13 +795,29 @@ function toggleFullscreen() {
     document.exitFullscreen().catch(() => {});
     document.body.classList.remove('fullscreen-mode');
   }
+  atualizarHeaderFullscreen();
 }
 
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement) {
     document.body.classList.remove('fullscreen-mode');
   }
+  atualizarHeaderFullscreen();
 });
+
+function atualizarHeaderFullscreen() {
+  const gh = $('game-header');
+  if (!gh) return;
+  if (document.fullscreenElement) {
+    gh.style.background = 'transparent';
+    gh.style.backdropFilter = 'none';
+    gh.style.borderBottom = 'none';
+  } else {
+    gh.style.background = '';
+    gh.style.backdropFilter = '';
+    gh.style.borderBottom = '';
+  }
+}
 
 function voltarMenu() {
   pararTimer();
@@ -1065,6 +1081,8 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-jogar-novamente').addEventListener('click', tentarIniciarJogo);
   $('btn-voltar-menu').addEventListener('click', voltarMenu);
   $('btn-voltar-inicio').addEventListener('click', voltarAoInicio);
+
+  atualizarHeaderFullscreen();
 
   var tabs = document.querySelectorAll('.ranking-tab');
   tabs.forEach(function(tab) {
