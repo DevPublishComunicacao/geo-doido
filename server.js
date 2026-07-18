@@ -4,9 +4,12 @@ const path = require('path');
 const session = require('express-session');
 const passport = require('passport');
 const { router: authRouter } = require('./auth');
+const migrate = require('./migrate');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+migrate();
 
 app.use(express.json());
 app.use(session({
