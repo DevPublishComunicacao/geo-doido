@@ -471,7 +471,7 @@ body.landing-active {
 /* Compass */
 #compass {
   position: absolute;
-  top: 55px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 600;
@@ -481,6 +481,7 @@ body.landing-active {
   pointer-events: none;
   width: 55%;
   max-width: 380px;
+  opacity: 0.55;
 }
 
 .compass-strip {
