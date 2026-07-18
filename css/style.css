@@ -289,21 +289,25 @@ body.landing-active {
   width: 100%;
 }
 #fs-header .fs-tracker-info .round-step {
-  font-size: 0.72rem;
-  padding: 2px 7px;
-  color: #aaa;
-  background: rgba(255,255,255,0.06);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #555;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid #2a2a3e;
   border-radius: 4px;
+  padding: 1px 5px;
+  line-height: 1.4;
   transition: all 0.2s;
 }
-#fs-header .fs-tracker-info .round-step.concluido {
-  color: #fff;
-  background: rgba(76,175,80,0.35);
-}
 #fs-header .fs-tracker-info .round-step.ativo {
-  color: #fff;
-  font-weight: 700;
-  background: rgba(255,68,68,0.4);
+  color: #00d2ff;
+  border-color: #00d2ff;
+  background: rgba(0,210,255,0.1);
+}
+#fs-header .fs-tracker-info .round-step.concluido {
+  color: #4caf50;
+  border-color: #4caf50;
+  background: rgba(76,175,80,0.1);
 }
 #fs-header .fs-tracker-info .round-step-arrow {
   color: #555;
