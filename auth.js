@@ -314,11 +314,13 @@ router.get('/api/auth/me', authMiddleware, async (req, res) => {
 // --- GOOGLE OAUTH ---
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL
+    || (process.env.FRONTEND_URL || 'http://localhost:3000') + '/api/auth/google/callback';
+  console.log('=== GOOGLE CALLBACK URL:', GOOGLE_CALLBACK_URL, '=== (FRONTEND_URL=' + process.env.FRONTEND_URL + ')');
   passport.use('google', new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: '/api/auth/google/callback',
-    proxy: true,
+    callbackURL: GOOGLE_CALLBACK_URL,
   }, async (accessToken, refreshToken, profile, done) => {
     try {
       const googleId = profile.id;
