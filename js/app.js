@@ -488,12 +488,7 @@ function iniciarRodada() {
   $('palpite-info').classList.add('hidden');
 
   var elAtracao = $('rd-atracao');
-  if (configModo === 'pontos-turisticos' && local.nome) {
-    elAtracao.textContent = '🏛️ ' + local.nome;
-    elAtracao.classList.remove('hidden');
-  } else if (elAtracao) {
-    elAtracao.classList.add('hidden');
-  }
+  if (elAtracao) elAtracao.classList.add('hidden');
 
   initStreetView(local.lat, local.lng);
 
