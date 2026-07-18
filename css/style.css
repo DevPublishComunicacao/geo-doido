@@ -190,6 +190,25 @@ body.landing-active {
   color: #3a7bd5;
 }
 
+.btn-icon-only {
+  background: transparent;
+  border: 1px solid #555;
+  border-radius: 8px;
+  color: #aaa;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 6px 10px;
+  line-height: 1;
+  transition: all 0.2s;
+  margin-right: 8px;
+}
+
+.btn-icon-only:hover {
+  color: #00d2ff;
+  border-color: #00d2ff;
+  background: rgba(0, 210, 255, 0.1);
+}
+
 .btn-fullscreen:hover {
   background: rgba(58, 123, 213, 0.15);
   color: #00d2ff;
