@@ -807,15 +807,14 @@ document.addEventListener('fullscreenchange', () => {
 
 function atualizarHeaderFullscreen() {
   const gh = $('game-header');
-  if (!gh) return;
+  const fsh = $('fs-header');
+  if (!gh || !fsh) return;
   if (document.fullscreenElement) {
-    gh.style.background = 'transparent';
-    gh.style.backdropFilter = 'none';
-    gh.style.borderBottom = 'none';
+    gh.classList.add('hidden');
+    fsh.classList.remove('hidden');
   } else {
-    gh.style.background = '';
-    gh.style.backdropFilter = '';
-    gh.style.borderBottom = '';
+    gh.classList.remove('hidden');
+    fsh.classList.add('hidden');
   }
 }
 
@@ -1078,6 +1077,8 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-proxima').addEventListener('click', proximaRodada);
   $('btn-fullscreen').addEventListener('click', toggleFullscreen);
   $('btn-sair').addEventListener('click', voltarMenu);
+  $('btn-fullscreen-fs').addEventListener('click', toggleFullscreen);
+  $('btn-sair-fs').addEventListener('click', voltarMenu);
   $('btn-jogar-novamente').addEventListener('click', tentarIniciarJogo);
   $('btn-voltar-menu').addEventListener('click', voltarMenu);
   $('btn-voltar-inicio').addEventListener('click', voltarAoInicio);
