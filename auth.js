@@ -369,10 +369,12 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   // Iniciar login Google
   router.get('/api/auth/google',
     (req, res, next) => {
+      const cbURL = googleCallbackURL(req);
+      console.log('=== GOOGLE INIT === protocol:', req.protocol, 'host:', req.get('host'), 'callbackURL:', cbURL);
       passport.authenticate('google', {
         scope: ['profile', 'email'],
         session: false,
-        callbackURL: googleCallbackURL(req),
+        callbackURL: cbURL,
       })(req, res, next);
     }
   );
@@ -391,6 +393,12 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       res.redirect(`/login.html?token=${token}&nome=${encodeURIComponent(req.user.nome)}&r=/game`);
     }
   );
+
+  // Tratamento de erro do passport (Google OAuth)
+  router.use('/api/auth/google', (err, req, res, next) => {
+    console.error('=== GOOGLE AUTH ERROR ===', err?.message, err?.stack);
+    res.status(500).json({ erro: 'Falha na autenticação Google', detalhe: err?.message });
+  });
 }
 
 // RANKINGS

@@ -25,6 +25,11 @@ app.use(authRouter);
 
 app.use(express.static(path.join(__dirname)));
 
+app.use((err, req, res, next) => {
+  console.error('=== ERRO ===', err?.message || err, err?.stack);
+  res.status(500).json({ erro: err?.message || 'Erro interno do servidor' });
+});
+
 app.get('/game', (req, res) => {
   res.sendFile(path.join(__dirname, 'game.html'));
 });
