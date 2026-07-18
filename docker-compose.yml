@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: geo-doido-db
+    environment:
+      POSTGRES_DB: geodoido
+      POSTGRES_USER: geodoido
+      POSTGRES_PASSWORD: geodoido123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+volumes:
+  pgdata:

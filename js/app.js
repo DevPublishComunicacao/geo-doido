@@ -57,6 +57,18 @@ function mostrarTela(tela) {
       el.classList.add('hidden');
     }
   });
+  const navbar = $('#navbar');
+  if (navbar) {
+    if (tela === 'tela-jogo' || tela === 'tela-config-jogo' || tela === 'tela-resultado') {
+      navbar.classList.add('hidden');
+      document.body.classList.remove('landing-active');
+      document.body.style.overflow = 'hidden';
+    } else {
+      navbar.classList.remove('hidden');
+      document.body.classList.add('landing-active');
+      document.body.style.overflow = '';
+    }
+  }
 }
 
 function carregarGoogleMaps(callback) {
@@ -139,7 +151,15 @@ function initMiniMapa() {
       fullscreenControl: false,
       gestureHandling: 'greedy',
       zoomControl: true,
-      scaleControl: true,
+      scaleControl: false,
+      styles: [
+        { featureType: 'all', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+        { featureType: 'administrative', elementType: 'labels.text', stylers: [{ visibility: 'off' }] },
+        { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+        { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+        { featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+        { featureType: 'water', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+      ],
     });
 
     mapaPalpite.addListener('click', onMiniMapaClick);
@@ -250,7 +270,7 @@ function initStreetView(lat, lng) {
           fullscreenControl: false,
           motionTrackingControl: false,
           panControl: false,
-          showRoadLabels: true,
+          showRoadLabels: false,
           visible: true,
           zoomControl: false,
           ...rolezinhoOpts,
@@ -676,6 +696,8 @@ function mostrarResultado() {
   mostrarTela('tela-resultado');
   $('pontuacao-final').textContent = jogo.pontuacao.toLocaleString('pt-BR');
 
+  salvarPartida(jogo.pontuacao);
+
   const container = $('lista-rodadas');
   container.innerHTML = '';
 
@@ -698,27 +720,31 @@ function mostrarResultado() {
   else if (jogo.pontuacao >= 5000) msg.textContent = 'Está no caminho! Estude mais os mapas!';
   else msg.textContent = 'O mundo é grande! Tente novamente!';
 
-  if (typeof localStorage === 'undefined') return;
-  const total = parseInt($('total-jogadas').textContent) + 1;
-  $('total-jogadas').textContent = total;
-  const melhor = parseInt($('melhor-pontuacao').textContent);
-  if (jogo.pontuacao > melhor) {
-    $('melhor-pontuacao').textContent = jogo.pontuacao;
-  }
-  try {
-    localStorage.setItem('geo-doido-total-jogadas', total);
-    localStorage.setItem('geo-doido-melhor-pontuacao', Math.max(melhor, jogo.pontuacao));
-  } catch (e) {}
+  carregarStats();
 }
 
 function carregarStats() {
-  if (typeof localStorage === 'undefined') return;
-  try {
-    const total = localStorage.getItem('geo-doido-total-jogadas');
-    const melhor = localStorage.getItem('geo-doido-melhor-pontuacao');
-    if (total) $('total-jogadas').textContent = total;
-    if (melhor) $('melhor-pontuacao').textContent = melhor;
-  } catch (e) {}
+  const token = localStorage.getItem('geo-doido-token');
+  if (token) {
+    fetch('/api/auth/stats', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var elTotal = $('total-jogadas');
+        if (elTotal) elTotal.textContent = data.total_partidas;
+        var elMelhor = $('melhor-pontuacao');
+        if (elMelhor) elMelhor.textContent = data.melhor_pontuacao.toLocaleString('pt-BR');
+      })
+      .catch(function() {});
+  }
+  fetch('/api/auth/recorde-geral')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var el = $('recorde-geral');
+      if (el) el.textContent = data.recorde.toLocaleString('pt-BR');
+    })
+    .catch(function() {});
 }
 
 async function iniciarJogo() {
@@ -799,6 +825,18 @@ function entrarJogo() {
     iniciarJogo();
     autoFullscreen();
   });
+}
+
+async function salvarPartida(pontuacao) {
+  const token = localStorage.getItem('geo-doido-token');
+  if (!token) return;
+  try {
+    await fetch('/api/auth/save-game', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ pontuacao }),
+    });
+  } catch (e) {}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
