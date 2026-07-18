@@ -258,8 +258,10 @@ body.landing-active {
   margin-right: 8px;
 }
 .fullscreen-mode #round-tracker {
+  position: static;
   flex-direction: row;
   gap: 10px;
+  transform: none;
 }
 .fullscreen-mode #round-tracker .round-steps {
   display: flex;
@@ -312,6 +314,7 @@ body.landing-active {
 }
 .fullscreen-mode .header-actions {
   margin-left: auto;
+  pointer-events: auto;
 }
 .fullscreen-mode .header-left {
   pointer-events: auto;
@@ -482,6 +485,9 @@ body.landing-active {
   flex-shrink: 0;
 }
 
+#game-header {
+  position: relative;
+}
 #fs-box {
   display: flex;
   align-items: center;
@@ -496,6 +502,9 @@ body.landing-active {
   flex-direction: column;
   align-items: center;
   gap: 2px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .round-steps {
