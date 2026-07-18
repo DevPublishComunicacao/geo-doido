@@ -94,9 +94,19 @@ async function initSQLite() {
       const table = getTableFromInsert(sql);
       const cols = extractReturningCols(sql);
       const cleanSql = stripReturning(converted);
+
+      // Debug: check table schema
+      try {
+        const schema = db.exec(`PRAGMA table_info(${table})`);
+        console.log('=== TABLE SCHEMA ===', table, JSON.stringify(schema));
+      } catch (e) {
+        console.error('=== SCHEMA CHECK FAILED ===', e.message);
+      }
+
       try {
         console.log('=== SQLITE INSERT ===', cleanSql, JSON.stringify(params));
         db.run(cleanSql, params);
+        console.log('=== SQLITE INSERT OK ===');
       } catch (e) {
         console.error('=== SQLITE INSERT ERROR ===', cleanSql, JSON.stringify(params), e.message);
         throw e;
@@ -117,7 +127,12 @@ async function initSQLite() {
       }
 
       const id = lastIdResult[0].values[0][0];
-      if (!id) throw new Error('INSERT não gerou ID (last_insert_rowid=' + id + ')');
+      if (!id) {
+        // Try alternative: check total rows
+        const count = db.exec('SELECT COUNT(*) AS c FROM usuarios');
+        console.log('=== USUARIOS COUNT ===', JSON.stringify(count));
+        throw new Error('INSERT não gerou ID (last_insert_rowid=' + id + ')');
+      }
 
       const colList = cols ? cols.join(',') : '*';
       const rowResult = db.exec(`SELECT ${colList} FROM ${table} WHERE id = ${id}`);
