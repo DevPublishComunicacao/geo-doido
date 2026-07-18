@@ -240,8 +240,17 @@ body.landing-active {
 }
 
 .fullscreen-mode #navbar {
-  background: transparent;
-  border-bottom: none;
+  background: transparent !important;
+  border-bottom: none !important;
+  backdrop-filter: none !important;
+  padding: 4px 12px;
+  min-height: 0;
+}
+
+.fullscreen-mode #nav-logo {
+  font-size: 0.8rem;
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .stats-globais {
