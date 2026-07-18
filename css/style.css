@@ -183,9 +183,9 @@ body.landing-active {
 }
 
 .btn-fullscreen {
-  font-size: 1rem;
+  font-size: 1.1rem;
   line-height: 1;
-  padding: 4px 12px;
+  padding: 5px 13px;
   border-color: #3a7bd5;
   color: #3a7bd5;
 }
