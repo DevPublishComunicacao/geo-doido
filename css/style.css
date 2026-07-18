@@ -197,6 +197,17 @@ body.landing-active {
   box-shadow: 0 0 12px rgba(0, 210, 255, 0.2);
 }
 
+.fs-label {
+  font-size: 0.75rem;
+  margin-left: 4px;
+}
+
+@media (max-width: 600px) {
+  .fs-label {
+    display: none;
+  }
+}
+
 .fullscreen-mode #tela-jogo {
   height: 100%;
 }
@@ -441,7 +452,7 @@ body.landing-active {
 /* Compass */
 #compass {
   position: absolute;
-  top: 8px;
+  top: 55px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 600;
