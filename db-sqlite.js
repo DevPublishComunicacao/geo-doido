@@ -105,7 +105,11 @@ async function initSQLite() {
 
       try {
         console.log('=== SQLITE INSERT ===', cleanSql, JSON.stringify(params));
-        db.run(cleanSql, params);
+        const stmt = db.prepare(cleanSql);
+        if (params && params.length > 0) stmt.bind(params);
+        const result = stmt.step();
+        console.log('=== SQLITE STEP RESULT ===', result);
+        stmt.free();
         console.log('=== SQLITE INSERT OK ===');
       } catch (e) {
         console.error('=== SQLITE INSERT ERROR ===', cleanSql, JSON.stringify(params), e.message);
@@ -126,12 +130,17 @@ async function initSQLite() {
         throw new Error('Falha ao obter último ID inserido');
       }
 
-      const id = lastIdResult[0].values[0][0];
-      if (!id) {
-        // Try alternative: check total rows
-        const count = db.exec('SELECT COUNT(*) AS c FROM usuarios');
-        console.log('=== USUARIOS COUNT ===', JSON.stringify(count));
-        throw new Error('INSERT não gerou ID (last_insert_rowid=' + id + ')');
+      let rowId = lastIdResult[0].values[0][0];
+      console.log('=== SQLITE ID VALUE ===', rowId);
+      if (!rowId) {
+        const maxId = db.exec('SELECT COALESCE(MAX(id), 0) AS max_id FROM usuarios');
+        rowId = maxId[0].values[0][0];
+        console.log('=== SQLITE MAX ID FALLBACK ===', rowId);
+        if (!rowId) {
+          const count = db.exec('SELECT COUNT(*) AS c FROM usuarios');
+          console.log('=== USUARIOS COUNT ===', JSON.stringify(count));
+          throw new Error('INSERT não gerou ID (last_insert_rowid=0)');
+        }
       }
 
       const colList = cols ? cols.join(',') : '*';
