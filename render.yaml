@@ -1,3 +1,9 @@
+databases:
+  - name: geo-doido-db
+    plan: free
+    region: oregon
+    postgresMajorVersion: 16
+
 services:
   - type: web
     name: geo-doido
@@ -20,13 +26,27 @@ services:
         sync: false
       - key: JWT_SECRET
         generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: geo-doido-db
+          property: connectionString
       - key: DB_HOST
-        sync: false
+        fromDatabase:
+          name: geo-doido-db
+          property: host
       - key: DB_PORT
-        sync: false
+        fromDatabase:
+          name: geo-doido-db
+          property: port
       - key: DB_NAME
-        sync: false
+        fromDatabase:
+          name: geo-doido-db
+          property: database
       - key: DB_USER
-        sync: false
+        fromDatabase:
+          name: geo-doido-db
+          property: user
       - key: DB_PASSWORD
-        sync: false
+        fromDatabase:
+          name: geo-doido-db
+          property: password
