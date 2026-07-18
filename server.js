@@ -4,13 +4,22 @@ const path = require('path');
 const session = require('express-session');
 const passport = require('passport');
 const { router: authRouter } = require('./auth');
+const db = require('./db');
 const migrate = require('./migrate');
 
 const app = express();
 app.set('trust proxy', true);
 const PORT = process.env.PORT || 3000;
 
-migrate();
+// Health check (antes de tudo)
+app.get('/api/health', async (req, res) => {
+  try {
+    await db.query('SELECT 1');
+    res.json({ status: 'ok', db: 'connected' });
+  } catch (err) {
+    res.status(503).json({ status: 'error', db: err.message, hint: 'Adicione DATABASE_URL ou sincronize o Blueprint no Render' });
+  }
+});
 
 app.use(express.json());
 app.use(session({
@@ -41,6 +50,9 @@ app.get('/config', (req, res) => {
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
+
+// Migration após iniciar
+setTimeout(() => migrate(), 1000);
 
 app.listen(PORT, () => {
   console.log(`GeoDoido rodando em http://localhost:${PORT}`);
