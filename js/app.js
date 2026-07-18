@@ -57,7 +57,7 @@ function mostrarTela(tela) {
       el.classList.add('hidden');
     }
   });
-  const navbar = $('#navbar');
+  const navbar = $('navbar');
   if (navbar) {
     if (tela === 'tela-jogo' || tela === 'tela-resultado') {
       navbar.classList.add('hidden');
