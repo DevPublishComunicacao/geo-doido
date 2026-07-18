@@ -17,6 +17,7 @@
     "nodemailer": "^9.0.3",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
-    "pg": "^8.22.0"
+    "pg": "^8.22.0",
+    "sql.js": "^1.14.1"
   }
 }

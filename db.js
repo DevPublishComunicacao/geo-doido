@@ -1,35 +1,38 @@
-const { Pool } = require('pg');
+const initSQLite = require('./db-sqlite');
 
 const DB_URL = process.env.DATABASE_URL
   || (process.env.DB_HOST ? `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}` : null);
 
-if (!DB_URL) {
-  console.error('===========================================================');
-  console.error('  ERRO: DATABASE_URL não configurada!');
-  console.error('  O banco PostgreSQL do Render não está acessível.');
-  console.error('  Execute o DEPLOY DO BLUEPRINT no Render Dashboard:');
-  console.error('  https://dashboard.render.com → Blueprints → Deploy Blueprint');
-  console.error('===========================================================');
+let db;
+
+async function init() {
+  if (DB_URL) {
+    try {
+      const { Pool } = require('pg');
+      const pool = new Pool({ connectionString: DB_URL, ssl: { rejectUnauthorized: false } });
+      await pool.query('SELECT 1');
+      pool.on('error', (err) => console.error('Erro no pool PostgreSQL:', err.message));
+      db = {
+        query: (text, params) => pool.query(text, params),
+        close: () => pool.end(),
+        type: 'postgres',
+      };
+      console.log('Banco: PostgreSQL conectado');
+      return;
+    } catch (err) {
+      console.error('PostgreSQL indisponível, fallback para SQLite:', err.message);
+    }
+  }
+
+  db = await initSQLite();
 }
 
-const pool = DB_URL
-  ? new Pool({ connectionString: DB_URL, ssl: { rejectUnauthorized: false } })
-  : null;
-
-if (pool) {
-  pool.on('error', (err) => {
-    console.error('Erro no pool PostgreSQL:', err.message);
-  });
-
-  pool.query('SELECT 1')
-    .then(() => console.log('Banco de dados conectado'))
-    .catch(err => console.error('Falha na conexão com banco:', err.message));
+async function query(text, params) {
+  if (!db) await init();
+  return db.query(text, params);
 }
 
 module.exports = {
-  query: async (text, params) => {
-    if (!pool) throw new Error('Banco de dados não configurado. Adicione DATABASE_URL nas env vars do Render.');
-    return pool.query(text, params);
-  },
-  pool,
+  query,
+  init,
 };
