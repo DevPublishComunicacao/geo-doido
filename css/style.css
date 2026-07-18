@@ -261,12 +261,19 @@ body.landing-active {
 #fs-header .fs-round-tracker {
   display: flex;
   align-items: center;
-  gap: 16px;
-  background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 10px;
-  padding: 8px 14px;
+  gap: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+#fs-header .fs-round-tracker .fs-tracker-divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(255,255,255,0.12);
+  margin: 0 10px;
+  flex-shrink: 0;
 }
 #fs-header .fs-tracker-info {
   display: flex;
