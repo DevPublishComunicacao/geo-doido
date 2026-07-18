@@ -263,6 +263,16 @@ body.landing-active {
   gap: 10px;
   transform: none;
 }
+.fs-divider {
+  display: none;
+}
+.fullscreen-mode .fs-divider {
+  display: block;
+  width: 1px;
+  height: 24px;
+  background: rgba(255,255,255,0.15);
+  flex-shrink: 0;
+}
 .fullscreen-mode #round-tracker .round-steps {
   display: flex;
   align-items: center;
