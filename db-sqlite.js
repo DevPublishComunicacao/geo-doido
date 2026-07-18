@@ -79,7 +79,11 @@ async function initSQLite() {
   `);
 
   function save() {
-    fs.writeFileSync(DB_PATH, Buffer.from(db.export()));
+    try {
+      fs.writeFileSync(DB_PATH, Buffer.from(db.export()));
+    } catch (e) {
+      console.error('=== SQLITE SAVE ERROR ===', DB_PATH, e.message);
+    }
   }
 
   function query(sql, params) {
@@ -91,6 +95,7 @@ async function initSQLite() {
       const cols = extractReturningCols(sql);
       const cleanSql = stripReturning(converted);
       try {
+        console.log('=== SQLITE INSERT ===', cleanSql, JSON.stringify(params));
         db.run(cleanSql, params);
       } catch (e) {
         console.error('=== SQLITE INSERT ERROR ===', cleanSql, JSON.stringify(params), e.message);
@@ -98,13 +103,21 @@ async function initSQLite() {
       }
       save();
 
-      const lastId = db.exec('SELECT last_insert_rowid() AS id');
-      if (!table || !lastId || !lastId.length) {
+      let lastIdResult;
+      try {
+        lastIdResult = db.exec('SELECT last_insert_rowid() AS id');
+        console.log('=== SQLITE LAST ID ===', JSON.stringify(lastIdResult));
+      } catch (e) {
+        console.error('=== SQLITE LAST ID ERROR ===', e.message);
+        throw new Error('Falha ao obter último ID: ' + e.message);
+      }
+
+      if (!table || !lastIdResult || !lastIdResult.length) {
         throw new Error('Falha ao obter último ID inserido');
       }
 
-      const id = lastId[0].values[0][0];
-      if (!id) throw new Error('INSERT não gerou ID');
+      const id = lastIdResult[0].values[0][0];
+      if (!id) throw new Error('INSERT não gerou ID (last_insert_rowid=' + id + ')');
 
       const colList = cols ? cols.join(',') : '*';
       const rowResult = db.exec(`SELECT ${colList} FROM ${table} WHERE id = ${id}`);
