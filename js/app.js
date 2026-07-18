@@ -404,36 +404,34 @@ function formatarTempoTracker(segundos) {
 }
 
 function buildRoundTracker() {
-  [['round-steps', false], ['fs-round-steps', true]].forEach(([id, isFs]) => {
-    const container = $(id);
-    if (!container) return;
-    container.innerHTML = '';
-    for (let i = 1; i <= jogo.totalRodadas; i++) {
-      if (i > 1) {
-        const arrow = document.createElement('span');
-        arrow.className = 'round-step-arrow';
-        arrow.textContent = '→';
-        container.appendChild(arrow);
-      }
-      const step = document.createElement('span');
-      step.className = 'round-step';
-      step.dataset.round = i;
-      step.textContent = i.toString().padStart(2, '0');
-      container.appendChild(step);
+  const container = $('round-steps');
+  if (!container) return;
+  container.innerHTML = '';
+  for (let i = 1; i <= jogo.totalRodadas; i++) {
+    if (i > 1) {
+      const arrow = document.createElement('span');
+      arrow.className = 'round-step-arrow';
+      arrow.textContent = '→';
+      container.appendChild(arrow);
     }
-    const arrow = document.createElement('span');
-    arrow.className = 'round-step-arrow';
-    arrow.textContent = '→';
-    container.appendChild(arrow);
-    const total = document.createElement('span');
-    total.className = 'round-step total';
-    total.id = isFs ? 'fs-rd-step-total' : 'rd-step-total';
-    total.textContent = 'Total';
-    container.appendChild(total);
-  });
+    const step = document.createElement('span');
+    step.className = 'round-step';
+    step.dataset.round = i;
+    step.textContent = i.toString().padStart(2, '0');
+    container.appendChild(step);
+  }
+  const arrow = document.createElement('span');
+  arrow.className = 'round-step-arrow';
+  arrow.textContent = '→';
+  container.appendChild(arrow);
+  const total = document.createElement('span');
+  total.className = 'round-step total';
+  total.id = 'rd-step-total';
+  total.textContent = 'Total';
+  container.appendChild(total);
 }
 
-function atualizarTrackerUI() {
+function updateRoundTracker() {
   const steps = document.querySelectorAll('.round-step');
   steps.forEach(s => s.classList.remove('ativo', 'concluido'));
   for (let i = 0; i < jogo.rodadaAtual; i++) {
@@ -445,30 +443,17 @@ function atualizarTrackerUI() {
   const scoreAtual = jogo.palpites.length > 0
     ? jogo.palpites[jogo.palpites.length - 1].pontos
     : 0;
-
   $('rd-round-label').textContent = `Round ${(jogo.rodadaAtual + 1).toString().padStart(2, '0')}`;
   $('rd-score').textContent = `⭐ ${scoreAtual} pts`;
-  if ($('fs-round-label')) {
-    $('fs-round-label').textContent = $('rd-round-label').textContent;
-    $('fs-rd-score').textContent = $('rd-score').textContent;
-  }
 
   const tempoEl = $('rd-time');
-  const fsTempoEl = $('fs-rd-time');
   if (configTempoRodada > 0) {
     tempoEl.classList.remove('hidden');
-    if (fsTempoEl) fsTempoEl.classList.remove('hidden');
     const gasto = temposRodada[jogo.rodadaAtual] || 0;
     tempoEl.textContent = `⏱ ${formatarTempoTracker(gasto)}`;
-    if (fsTempoEl) fsTempoEl.textContent = tempoEl.textContent;
   } else {
     tempoEl.classList.add('hidden');
-    if (fsTempoEl) fsTempoEl.classList.add('hidden');
   }
-}
-
-function updateRoundTracker() {
-  atualizarTrackerUI();
 }
 
 function atualizarTrackerTotal() {
@@ -476,24 +461,16 @@ function atualizarTrackerTotal() {
   const totalTempo = temposRodada.reduce((a, b) => a + b, 0);
   $('rd-round-label').textContent = 'Total';
   $('rd-score').textContent = `⭐ ${totalPts} pts`;
-  if ($('fs-round-label')) {
-    $('fs-round-label').textContent = 'Total';
-    $('fs-rd-score').textContent = `⭐ ${totalPts} pts`;
-  }
   const tempoEl = $('rd-time');
-  const fsTempoEl = $('fs-rd-time');
   if (configTempoRodada > 0) {
     tempoEl.classList.remove('hidden');
-    if (fsTempoEl) fsTempoEl.classList.remove('hidden');
     tempoEl.textContent = `⏱ ${formatarTempoTracker(totalTempo)}`;
-    if (fsTempoEl) fsTempoEl.textContent = tempoEl.textContent;
   } else {
     tempoEl.classList.add('hidden');
-    if (fsTempoEl) fsTempoEl.classList.add('hidden');
   }
   const steps = document.querySelectorAll('.round-step');
   steps.forEach(s => s.classList.remove('ativo', 'concluido'));
-  const totalStep = $('rd-step-total') || $('fs-rd-step-total');
+  const totalStep = $('rd-step-total');
   if (totalStep) totalStep.classList.add('ativo');
 }
 
@@ -818,7 +795,6 @@ function toggleFullscreen() {
     document.exitFullscreen().catch(() => {});
     document.body.classList.remove('fullscreen-mode');
   }
-  atualizarHeaderFullscreen();
 }
 
 document.addEventListener('fullscreenchange', () => {
@@ -827,22 +803,7 @@ document.addEventListener('fullscreenchange', () => {
   } else {
     document.body.classList.remove('fullscreen-mode');
   }
-  atualizarHeaderFullscreen();
 });
-
-function atualizarHeaderFullscreen() {
-  const gh = $('game-header');
-  const fsh = $('fs-header');
-  if (!gh || !fsh) return;
-  const isFs = document.body.classList.contains('fullscreen-mode');
-  if (isFs) {
-    gh.classList.add('hidden');
-    fsh.classList.remove('hidden');
-  } else {
-    gh.classList.remove('hidden');
-    fsh.classList.add('hidden');
-  }
-}
 
 function voltarMenu() {
   pararTimer();
@@ -1103,13 +1064,9 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-proxima').addEventListener('click', proximaRodada);
   $('btn-fullscreen').addEventListener('click', toggleFullscreen);
   $('btn-sair').addEventListener('click', voltarMenu);
-  $('btn-fullscreen-fs').addEventListener('click', toggleFullscreen);
-  $('btn-sair-fs').addEventListener('click', voltarMenu);
   $('btn-jogar-novamente').addEventListener('click', tentarIniciarJogo);
   $('btn-voltar-menu').addEventListener('click', voltarMenu);
   $('btn-voltar-inicio').addEventListener('click', voltarAoInicio);
-
-  atualizarHeaderFullscreen();
 
   var tabs = document.querySelectorAll('.ranking-tab');
   tabs.forEach(function(tab) {

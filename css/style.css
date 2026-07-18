@@ -232,106 +232,81 @@ body.landing-active {
 }
 
 .fullscreen-mode #game-header {
-  display: none !important;
-}
-#fs-header {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1001;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 16px;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  border-bottom: none !important;
+  padding: 6px 12px;
   pointer-events: none;
 }
-#fs-header .fs-logo {
+.fullscreen-mode #game-header .game-title {
   font-size: 0.9rem;
-  font-weight: 800;
   color: rgba(255,255,255,0.5);
-  letter-spacing: -0.5px;
 }
-#fs-header .fs-actions {
-  display: flex;
-  gap: 6px;
-  pointer-events: auto;
-  flex-shrink: 0;
-}
-#fs-header .fs-round-tracker {
-  display: flex;
+.fullscreen-mode #round-tracker {
+  display: flex !important;
+  flex-direction: row;
   align-items: center;
-  gap: 0;
+  gap: 12px;
+  margin-left: auto;
+  margin-right: 0;
   background: rgba(0,0,0,0.5);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 8px;
   padding: 6px 12px;
+  pointer-events: auto;
 }
-#fs-header .fs-round-tracker .fs-tracker-divider {
-  width: 1px;
-  height: 28px;
-  background: rgba(255,255,255,0.12);
-  margin: 0 10px;
-  flex-shrink: 0;
-}
-#fs-header .fs-tracker-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 3px;
-}
-#fs-header .fs-tracker-info .round-steps {
+.fullscreen-mode #round-tracker .round-steps {
   display: flex;
   align-items: center;
-  gap: 0;
-  justify-content: flex-end;
-  width: 100%;
 }
-#fs-header .fs-tracker-info .round-step {
+.fullscreen-mode #round-tracker .round-step {
   font-size: 0.65rem;
   font-weight: 700;
   color: #555;
   background: rgba(255,255,255,0.06);
+  border: none !important;
   border-radius: 4px;
   padding: 2px 7px;
   line-height: 1.4;
-  transition: all 0.2s;
 }
-#fs-header .fs-tracker-info .round-step.ativo {
+.fullscreen-mode #round-tracker .round-step.ativo {
   color: #00d2ff;
   background: rgba(0,210,255,0.15);
 }
-#fs-header .fs-tracker-info .round-step.total {
+.fullscreen-mode #round-tracker .round-step.total {
   color: #f0a030;
   background: rgba(240,160,48,0.15);
 }
-#fs-header .fs-tracker-info .round-step.concluido {
+.fullscreen-mode #round-tracker .round-step.concluido {
   color: #4caf50;
   background: rgba(76,175,80,0.15);
 }
-#fs-header .fs-tracker-info .round-step-arrow {
+.fullscreen-mode #round-tracker .round-step-arrow {
   color: #555;
   font-size: 0.6rem;
   margin: 0 2px;
 }
-#fs-header .fs-tracker-info .round-details {
+.fullscreen-mode #round-tracker .round-details {
   display: flex;
   gap: 10px;
   align-items: center;
 }
-#fs-header .fs-tracker-info .rd-label {
+.fullscreen-mode #round-tracker .rd-label {
   color: #ddd;
   font-size: 0.72rem;
   font-weight: 600;
 }
-#fs-header .fs-tracker-info .rd-score {
+.fullscreen-mode #round-tracker .rd-score {
   color: #ffd700;
   font-size: 0.72rem;
 }
-#fs-header .fs-tracker-info .rd-time {
+.fullscreen-mode #round-tracker .rd-time {
   color: #aaa;
   font-size: 0.68rem;
+}
+.fullscreen-mode .header-actions {
+  pointer-events: auto;
 }
 .fullscreen-mode #fs-header {
   display: flex !important;
@@ -497,7 +472,6 @@ body.landing-active {
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-  margin-left: auto;
 }
 
 /* Round Tracker */
@@ -508,6 +482,12 @@ body.landing-active {
   gap: 2px;
   margin-left: auto;
   margin-right: 12px;
+}
+.tracker-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255,255,255,0.12);
+  flex-shrink: 0;
 }
 
 .round-steps {
