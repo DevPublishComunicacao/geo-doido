@@ -290,17 +290,20 @@ body.landing-active {
 }
 #fs-header .fs-tracker-info .round-step {
   font-size: 0.72rem;
-  padding: 2px 5px;
-  color: #888;
-  border-radius: 3px;
-  transition: color 0.2s;
+  padding: 2px 7px;
+  color: #aaa;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  transition: all 0.2s;
 }
 #fs-header .fs-tracker-info .round-step.concluido {
-  color: #4caf50;
+  color: #fff;
+  background: rgba(76,175,80,0.35);
 }
 #fs-header .fs-tracker-info .round-step.ativo {
-  color: #ff4444;
+  color: #fff;
   font-weight: 700;
+  background: rgba(255,68,68,0.4);
 }
 #fs-header .fs-tracker-info .round-step-arrow {
   color: #555;
@@ -583,7 +586,7 @@ body.landing-active {
 /* Compass */
 #compass {
   position: absolute;
-  top: 28px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 600;
