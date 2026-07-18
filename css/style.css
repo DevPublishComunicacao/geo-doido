@@ -248,19 +248,18 @@ body.landing-active {
   color: rgba(255,255,255,0.5);
   -webkit-text-fill-color: rgba(255,255,255,0.5);
 }
-.fullscreen-mode #round-tracker {
-  flex-direction: row;
-  gap: 10px;
+.fullscreen-mode #fs-box {
   background: rgba(0,0,0,0.5);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 8px;
   padding: 5px 10px;
   pointer-events: auto;
-  margin-left: auto;
   margin-right: 8px;
-  height: auto;
-  min-height: 0;
+}
+.fullscreen-mode #round-tracker {
+  flex-direction: row;
+  gap: 10px;
 }
 .fullscreen-mode #round-tracker .round-steps {
   display: flex;
@@ -312,7 +311,6 @@ body.landing-active {
   font-size: 0.68rem;
 }
 .fullscreen-mode .header-actions {
-  pointer-events: auto;
   margin-left: auto;
 }
 .fullscreen-mode .header-left {
@@ -482,7 +480,14 @@ body.landing-active {
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
+}
+
+#fs-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-left: auto;
+  margin-right: 12px;
 }
 
 /* Round Tracker */
@@ -491,8 +496,6 @@ body.landing-active {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  margin-left: auto;
-  margin-right: 12px;
 }
 
 .round-steps {
