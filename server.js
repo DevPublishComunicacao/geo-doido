@@ -7,7 +7,7 @@ const { router: authRouter } = require('./auth');
 const migrate = require('./migrate');
 
 const app = express();
-app.set('trust proxy', 1);
+app.set('trust proxy', true);
 const PORT = process.env.PORT || 3000;
 
 migrate();

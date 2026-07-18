@@ -314,13 +314,9 @@ router.get('/api/auth/me', authMiddleware, async (req, res) => {
 // --- GOOGLE OAUTH ---
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL
-    || (process.env.FRONTEND_URL || 'http://localhost:3000') + '/api/auth/google/callback';
-  console.log('=== GOOGLE CALLBACK URL:', GOOGLE_CALLBACK_URL, '=== (FRONTEND_URL=' + process.env.FRONTEND_URL + ')');
   passport.use('google', new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: GOOGLE_CALLBACK_URL,
   }, async (accessToken, refreshToken, profile, done) => {
     try {
       const googleId = profile.id;
@@ -371,10 +367,11 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   // Iniciar login Google
   router.get('/api/auth/google',
     (req, res, next) => {
-      console.log('=== GOOGLE LOGIN INICIADO ===');
+      const callbackURL = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
       passport.authenticate('google', {
         scope: ['profile', 'email'],
         session: false,
+        callbackURL,
       })(req, res, next);
     }
   );
@@ -382,11 +379,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   // Callback do Google
   router.get('/api/auth/google/callback',
     (req, res, next) => {
-      console.log('=== GOOGLE CALLBACK RECEBIDO ===', req.query);
       passport.authenticate('google', { session: false, failureRedirect: '/login.html?erro=google' })(req, res, next);
     },
     (req, res) => {
-      console.log('=== GOOGLE AUTH SUCESSO ===', req.user?.email);
       const token = gerarToken(req.user);
       res.redirect(`/login.html?token=${token}&nome=${encodeURIComponent(req.user.nome)}&r=/game`);
     }
