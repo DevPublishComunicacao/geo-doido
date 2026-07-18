@@ -252,10 +252,66 @@ body.landing-active {
   color: rgba(255,255,255,0.5);
   letter-spacing: -0.5px;
 }
+#fs-header .fs-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
 #fs-header .fs-actions {
   display: flex;
   gap: 6px;
   pointer-events: auto;
+}
+#fs-header .fs-round-tracker {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+#fs-header .fs-round-tracker .round-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  justify-content: flex-end;
+  width: 100%;
+}
+#fs-header .fs-round-tracker .round-step {
+  font-size: 0.7rem;
+  padding: 1px 4px;
+  color: #888;
+  border-radius: 3px;
+  transition: color 0.2s;
+}
+#fs-header .fs-round-tracker .round-step.concluido {
+  color: #4caf50;
+}
+#fs-header .fs-round-tracker .round-step.ativo {
+  color: #ff4444;
+  font-weight: 700;
+}
+#fs-header .fs-round-tracker .round-step-arrow {
+  color: #555;
+  font-size: 0.6rem;
+  margin: 0 2px;
+}
+#fs-header .fs-round-tracker .round-details {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+#fs-header .fs-round-tracker .rd-label {
+  color: #ccc;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+#fs-header .fs-round-tracker .rd-score {
+  color: #ffd700;
+  font-size: 0.7rem;
+}
+#fs-header .fs-round-tracker .rd-time {
+  color: #aaa;
+  font-size: 0.65rem;
 }
 .fullscreen-mode #fs-header {
   display: flex;

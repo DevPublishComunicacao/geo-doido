@@ -404,34 +404,36 @@ function formatarTempoTracker(segundos) {
 }
 
 function buildRoundTracker() {
-  const container = $('round-steps');
-  if (!container) return;
-  container.innerHTML = '';
-  for (let i = 1; i <= jogo.totalRodadas; i++) {
-    if (i > 1) {
-      const arrow = document.createElement('span');
-      arrow.className = 'round-step-arrow';
-      arrow.textContent = '→';
-      container.appendChild(arrow);
+  [['round-steps', false], ['fs-round-steps', true]].forEach(([id, isFs]) => {
+    const container = $(id);
+    if (!container) return;
+    container.innerHTML = '';
+    for (let i = 1; i <= jogo.totalRodadas; i++) {
+      if (i > 1) {
+        const arrow = document.createElement('span');
+        arrow.className = 'round-step-arrow';
+        arrow.textContent = '→';
+        container.appendChild(arrow);
+      }
+      const step = document.createElement('span');
+      step.className = 'round-step';
+      step.dataset.round = i;
+      step.textContent = i.toString().padStart(2, '0');
+      container.appendChild(step);
     }
-    const step = document.createElement('span');
-    step.className = 'round-step';
-    step.dataset.round = i;
-    step.textContent = i.toString().padStart(2, '0');
-    container.appendChild(step);
-  }
-  const arrow = document.createElement('span');
-  arrow.className = 'round-step-arrow';
-  arrow.textContent = '→';
-  container.appendChild(arrow);
-  const total = document.createElement('span');
-  total.className = 'round-step total';
-  total.id = 'rd-step-total';
-  total.textContent = 'Total';
-  container.appendChild(total);
+    const arrow = document.createElement('span');
+    arrow.className = 'round-step-arrow';
+    arrow.textContent = '→';
+    container.appendChild(arrow);
+    const total = document.createElement('span');
+    total.className = 'round-step total';
+    total.id = isFs ? 'fs-rd-step-total' : 'rd-step-total';
+    total.textContent = 'Total';
+    container.appendChild(total);
+  });
 }
 
-function updateRoundTracker() {
+function atualizarTrackerUI() {
   const steps = document.querySelectorAll('.round-step');
   steps.forEach(s => s.classList.remove('ativo', 'concluido'));
   for (let i = 0; i < jogo.rodadaAtual; i++) {
@@ -443,17 +445,30 @@ function updateRoundTracker() {
   const scoreAtual = jogo.palpites.length > 0
     ? jogo.palpites[jogo.palpites.length - 1].pontos
     : 0;
+
   $('rd-round-label').textContent = `Round ${(jogo.rodadaAtual + 1).toString().padStart(2, '0')}`;
   $('rd-score').textContent = `⭐ ${scoreAtual} pts`;
+  if ($('fs-round-label')) {
+    $('fs-round-label').textContent = $('rd-round-label').textContent;
+    $('fs-rd-score').textContent = $('rd-score').textContent;
+  }
 
   const tempoEl = $('rd-time');
+  const fsTempoEl = $('fs-rd-time');
   if (configTempoRodada > 0) {
     tempoEl.classList.remove('hidden');
+    if (fsTempoEl) fsTempoEl.classList.remove('hidden');
     const gasto = temposRodada[jogo.rodadaAtual] || 0;
     tempoEl.textContent = `⏱ ${formatarTempoTracker(gasto)}`;
+    if (fsTempoEl) fsTempoEl.textContent = tempoEl.textContent;
   } else {
     tempoEl.classList.add('hidden');
+    if (fsTempoEl) fsTempoEl.classList.add('hidden');
   }
+}
+
+function updateRoundTracker() {
+  atualizarTrackerUI();
 }
 
 function atualizarTrackerTotal() {
@@ -461,16 +476,24 @@ function atualizarTrackerTotal() {
   const totalTempo = temposRodada.reduce((a, b) => a + b, 0);
   $('rd-round-label').textContent = 'Total';
   $('rd-score').textContent = `⭐ ${totalPts} pts`;
+  if ($('fs-round-label')) {
+    $('fs-round-label').textContent = 'Total';
+    $('fs-rd-score').textContent = `⭐ ${totalPts} pts`;
+  }
   const tempoEl = $('rd-time');
+  const fsTempoEl = $('fs-rd-time');
   if (configTempoRodada > 0) {
     tempoEl.classList.remove('hidden');
+    if (fsTempoEl) fsTempoEl.classList.remove('hidden');
     tempoEl.textContent = `⏱ ${formatarTempoTracker(totalTempo)}`;
+    if (fsTempoEl) fsTempoEl.textContent = tempoEl.textContent;
   } else {
     tempoEl.classList.add('hidden');
+    if (fsTempoEl) fsTempoEl.classList.add('hidden');
   }
   const steps = document.querySelectorAll('.round-step');
   steps.forEach(s => s.classList.remove('ativo', 'concluido'));
-  const totalStep = $('rd-step-total');
+  const totalStep = $('rd-step-total') || $('fs-rd-step-total');
   if (totalStep) totalStep.classList.add('ativo');
 }
 
