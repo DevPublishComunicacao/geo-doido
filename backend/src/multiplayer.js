@@ -1,3 +1,6 @@
+const https = require('https');
+const MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
+
 const REGIOES_STREET_VIEW = [
   { nome: 'Estados Unidos', bounds: { latMin: 24.5, latMax: 49.5, lngMin: -125, lngMax: -66.5 } },
   { nome: 'Brasil', bounds: { latMin: -34, latMax: 6, lngMin: -74, lngMax: -34 } },
@@ -25,6 +28,41 @@ function gerarCoordenadaAleatoria(bounds) {
   const lat = bounds.latMin + Math.random() * (bounds.latMax - bounds.latMin);
   const lng = bounds.lngMin + Math.random() * (bounds.lngMax - bounds.lngMin);
   return { lat, lng };
+}
+
+function verificarCoberturaStreetView(lat, lng) {
+  return new Promise((resolve) => {
+    if (!MAPS_API_KEY || MAPS_API_KEY.length < 20) {
+      resolve({ ok: true, lat, lng });
+      return;
+    }
+    const url = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${lat},${lng}&key=${MAPS_API_KEY}`;
+    const req = https.get(url, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (json.status === 'OK' && json.location) {
+            resolve({ ok: true, lat: json.location.lat, lng: json.location.lng });
+          } else if (json.status === 'ZERO_RESULTS') {
+            resolve({ ok: false });
+          } else {
+            resolve({ ok: true, lat, lng });
+          }
+        } catch (e) {
+          resolve({ ok: true, lat, lng });
+        }
+      });
+    });
+    req.on('error', () => {
+      resolve({ ok: true, lat, lng });
+    });
+    req.setTimeout(3000, () => {
+      req.destroy();
+      resolve({ ok: true, lat, lng });
+    });
+  });
 }
 
 function calcularDistancia(lat1, lng1, lat2, lng2) {
@@ -249,6 +287,47 @@ function setupMultiplayer(io) {
       if (Object.keys(sala.guesses).length >= sala.players.length) {
         finalizarRodada(sala);
       }
+    });
+
+    socket.on('request_new_location', async (data) => {
+      if (!salaAtual) return;
+      const sala = salas.get(salaAtual);
+      if (!sala) return;
+      if (sala.state !== 'playing') return;
+
+      let encontrou = false;
+      for (let tentativa = 0; tentativa < 10; tentativa++) {
+        const bounds = REGIOES_STREET_VIEW[Math.floor(Math.random() * REGIOES_STREET_VIEW.length)].bounds;
+        const coords = gerarCoordenadaAleatoria(bounds);
+        const resultado = await verificarCoberturaStreetView(coords.lat, coords.lng);
+        if (resultado.ok) {
+          sala.locations[sala.round] = {
+            lat: +resultado.lat.toFixed(6),
+            lng: +resultado.lng.toFixed(6),
+          };
+          encontrou = true;
+          break;
+        }
+      }
+
+      if (!encontrou) {
+        const bounds = REGIOES_STREET_VIEW[Math.floor(Math.random() * REGIOES_STREET_VIEW.length)].bounds;
+        const coords = gerarCoordenadaAleatoria(bounds);
+        sala.locations[sala.round] = {
+          lat: +coords.lat.toFixed(6),
+          lng: +coords.lng.toFixed(6),
+        };
+      }
+
+      sala.guesses = {};
+      sala.players.forEach(p => { p.guessed = false; });
+
+      ioInstance.to(sala.codigo).emit('round_start', {
+        round: sala.round + 1,
+        totalRounds: sala.totalRounds,
+        lat: sala.locations[sala.round].lat,
+        lng: sala.locations[sala.round].lng,
+      });
     });
 
     socket.on('next_round', () => {

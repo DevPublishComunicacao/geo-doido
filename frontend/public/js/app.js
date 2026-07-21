@@ -368,6 +368,9 @@ function mostrarFalhaStreetView(container) {
       <p style="font-size:0.85rem;color:#777;">Use o mini-mapa para fazer seu palpite</p>
     </div>
   `;
+  if (typeof window._onStreetViewFail === 'function') {
+    window._onStreetViewFail();
+  }
 }
 
 function resizeMiniMapa() {
@@ -599,7 +602,7 @@ function confirmarPalpite() {
   }
 
   // Multiplayer: enviar palpite para o servidor em vez de calcular localmente
-  if (typeof enviarPalpiteMulti === 'function' && !mpGuessConfirmed) {
+  if (typeof enviarPalpiteMulti === 'function' && !mpGuessConfirmed && mpSocket) {
     $('btn-palpite').classList.add('hidden');
     enviarPalpiteMulti(lat, lng);
     return;

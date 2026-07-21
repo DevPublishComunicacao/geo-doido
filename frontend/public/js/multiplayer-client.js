@@ -15,6 +15,9 @@ function getUsuario() {
 
 var mpAcaoPendente = null;
 var mpDadosPendentes = null;
+var mpRetryCount = 0;
+var mpMaxRetries = 5;
+var mpUltimoRound = 0;
 
 function conectarMultiplayer(acao, dados) {
   console.log('conectarMultiplayer called, acao=' + acao + ', typeof io=' + typeof io);
@@ -113,6 +116,10 @@ function conectarMultiplayer(acao, dados) {
 
   mpSocket.on('round_start', function(data) {
     if (mpSocket._roundTimeout) { clearTimeout(mpSocket._roundTimeout); mpSocket._roundTimeout = null; }
+    if (data.round !== mpUltimoRound) {
+      mpRetryCount = 0;
+      mpUltimoRound = data.round;
+    }
     mpRound = data.round;
     mpTotalRounds = data.totalRounds;
     mpGuessConfirmed = false;
@@ -141,6 +148,7 @@ function conectarMultiplayer(acao, dados) {
   });
 
   mpSocket.on('game_end', function(data) {
+    window._onStreetViewFail = null;
     mostrarResultadoFinalMulti(data.ranking);
   });
 
@@ -173,6 +181,7 @@ function iniciarPartida() {
 }
 
 function sairDaSala() {
+  window._onStreetViewFail = null;
   if (mpSocket) {
     mpSocket.emit('leave_room');
     mpSocket.disconnect();
@@ -180,6 +189,8 @@ function sairDaSala() {
   mpSocket = null;
   mpSala = null;
   mpHost = false;
+  mpRetryCount = 0;
+  mpUltimoRound = 0;
   document.getElementById('mp-panel').classList.add('hidden');
   document.getElementById('mp-lobby').classList.add('hidden');
   document.getElementById('mp-waiting').classList.add('hidden');
@@ -192,6 +203,10 @@ function mostrarLobby() {
   document.getElementById('mp-lobby').classList.remove('hidden');
   document.getElementById('mp-lobby').querySelector('.mp-codigo-display').textContent = mpSala;
   atualizarListaJogadores();
+  // Pré-carrega Google Maps enquanto espera no lobby
+  if (typeof carregarGoogleMaps === 'function') {
+    carregarGoogleMaps(function() { console.log('Google Maps pronto para multiplayer'); });
+  }
 }
 
 function atualizarListaJogadores() {
@@ -373,7 +388,7 @@ function iniciarRodadaMulti(local) {
   document.getElementById('mp-round-result').querySelector('.mp-next-round-btn').classList.add('hidden');
 
   if (typeof jogo !== 'undefined') {
-    jogo.rodadaAtual = mpRound - 1;
+    jogo.rodadaAtual = 0;
     jogo.totalRodadas = mpTotalRounds;
     jogo.locaisRodada = [local];
     jogo.pontuacao = 0;
@@ -382,6 +397,15 @@ function iniciarRodadaMulti(local) {
     jogo.pais = null;
     jogo.modo = 'multiplayer';
   }
+
+  window._onStreetViewFail = function() {
+    mpRetryCount++;
+    if (mpRetryCount <= mpMaxRetries && mpSocket && mpSocket.connected) {
+      setTimeout(function() {
+        mpSocket.emit('request_new_location', { round: mpRound });
+      }, 500);
+    }
+  };
 
   if (typeof iniciarRodada === 'function') {
     iniciarRodada();
