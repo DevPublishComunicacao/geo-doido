@@ -19,7 +19,7 @@ function conectarMultiplayer(acao, dados) {
   if (mpSocket) { mpSocket.disconnect(); mpSocket = null; }
   mpAcaoPendente = acao;
   mpDadosPendentes = dados || {};
-  mpSocket = io({ transports: ['websocket', 'polling'] });
+  mpSocket = io({ transports: ['polling', 'websocket'], timeout: 10000 });
 
   mpSocket.on('connect', function() {
     console.log('Socket conectado');
@@ -39,8 +39,11 @@ function conectarMultiplayer(acao, dados) {
   });
 
   mpSocket.on('connect_error', function(err) {
-    console.error('Socket erro:', err);
-    alert('Erro ao conectar ao servidor: ' + err.message);
+    console.warn('Socket transport error (normal fallback):', err.message);
+  });
+
+  mpSocket.on('connect_timeout', function() {
+    alert('Tempo limite excedido ao conectar ao servidor. Verifique sua conexão e tente novamente.');
   });
 
   mpSocket.on('room_created', function(data) {
