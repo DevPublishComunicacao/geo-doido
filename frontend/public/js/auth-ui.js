@@ -34,7 +34,13 @@
         var nomeEl = getEl('nav-user-nome');
         var avatarEl = getEl('nav-avatar');
         if (nomeEl && usuario) nomeEl.textContent = usuario.nome || 'Usuário';
-        if (avatarEl) avatarEl.textContent = getInitials(usuario && usuario.nome);
+        if (avatarEl) {
+          if (usuario && usuario.avatar_url) {
+            avatarEl.innerHTML = '<img src="' + usuario.avatar_url + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+          } else {
+            avatarEl.textContent = getInitials(usuario && usuario.nome);
+          }
+        }
       }
 
       document.body.classList.add('landing-active');

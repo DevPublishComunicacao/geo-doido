@@ -146,7 +146,8 @@ router.post('/api/auth/login-form', express.urlencoded({ extended: false }), asy
     const usuario = result.rows[0];
     const token = gerarToken(usuario);
     const nomeEncoded = encodeURIComponent(usuario.nome);
-    res.redirect(`/login.html?token=${token}&nome=${nomeEncoded}&r=/game`);
+    const avatarEncoded = encodeURIComponent(usuario.avatar_url || '');
+    res.redirect(`/login.html?token=${token}&nome=${nomeEncoded}&avatar=${avatarEncoded}&r=/game`);
   } catch (err) {
     console.error('Erro no login-form:', err);
     res.redirect('/login.html?erro=login_error');
@@ -180,7 +181,8 @@ router.post('/api/auth/register-form', express.urlencoded({ extended: false }), 
     const usuario = result.rows[0];
     const token = gerarToken(usuario);
     const nomeEncoded = encodeURIComponent(usuario.nome);
-    res.redirect(`/login.html?token=${token}&nome=${nomeEncoded}&r=/game`);
+    const avatarEncoded = encodeURIComponent(usuario.avatar_url || '');
+    res.redirect(`/login.html?token=${token}&nome=${nomeEncoded}&avatar=${avatarEncoded}&r=/game`);
   } catch (err) {
     console.error('Erro no register-form:', err);
     res.redirect('/login.html?erro=register_error');
@@ -445,7 +447,7 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
       const user = await findOrCreateGoogleUser(userResp.body);
       const token = gerarToken(user);
 
-      res.redirect(`/login.html?token=${token}&nome=${encodeURIComponent(user.nome)}&r=/game`);
+      res.redirect(`/login.html?token=${token}&nome=${encodeURIComponent(user.nome)}&avatar=${encodeURIComponent(user.avatar_url || '')}&r=/game`);
     } catch (err) {
       const detalhe = JSON.stringify({
         typeof: typeof err,

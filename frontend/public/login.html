@@ -129,9 +129,10 @@
     var token = params.get('token');
     if (token) {
       var nome = params.get('nome') || 'Usuário';
+      var avatar = params.get('avatar') || '';
       var redirect = params.get('r') || '';
       localStorage.setItem('where-token', token);
-      localStorage.setItem('where-usuario', JSON.stringify({ nome: nome }));
+      localStorage.setItem('where-usuario', JSON.stringify({ nome: nome, avatar_url: avatar }));
       window.location.href = redirect || '/';
     }
 
