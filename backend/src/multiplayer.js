@@ -66,8 +66,10 @@ function gerarCodigoSala() {
 }
 
 const salas = new Map();
+let ioInstance = null;
 
 function setupMultiplayer(io) {
+  ioInstance = io;
   io.on('connection', (socket) => {
     let salaAtual = null;
 
@@ -306,7 +308,7 @@ function setupMultiplayer(io) {
 
 function enviarRodada(sala) {
   const local = sala.locations[sala.round];
-  io.to(sala.codigo).emit('round_start', {
+  ioInstance.to(sala.codigo).emit('round_start', {
     round: sala.round + 1,
     totalRounds: sala.totalRounds,
     lat: local.lat,
@@ -331,7 +333,7 @@ function finalizarRodada(sala) {
 
   resultados.sort((a, b) => b.pontos - a.pontos);
 
-  io.to(sala.codigo).emit('round_end', {
+  ioInstance.to(sala.codigo).emit('round_end', {
     round: sala.round + 1,
     local,
     resultados,
@@ -349,7 +351,7 @@ function finalizarJogo(sala) {
 
   ranking.sort((a, b) => b.pontuacao - a.pontuacao);
 
-  io.to(sala.codigo).emit('game_end', { ranking });
+  ioInstance.to(sala.codigo).emit('game_end', { ranking });
   salas.delete(sala.codigo);
 }
 
