@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Where? - Configurar</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="auth-page" style="overflow:hidden;height:100vh;">
+  <div id="app">
+    <div id="hero-streetview"></div>
+    <div id="hero-overlay"></div>
+    <div class="auth-container" style="height:100vh;overflow:hidden;padding:12px 20px;">
+      <a href="/game" class="auth-back-link">← Voltar</a>
+      <a href="/game" class="auth-logo"><img src="images/logo.png" alt="Where?" class="logo-img-auth"></a>
+
+      <div class="config-jogo-box" style="max-width:520px;width:94%;max-height:calc(100vh - 100px);overflow-y:hidden;display:flex;flex-direction:column;">
+        <div class="config-jogo-header">
+          <span class="config-jogo-icon">⚙️</span>
+          <h2>Configurar Partida</h2>
+        </div>
+
+        <div class="config-jogo-opcao">
+          <label class="config-jogo-label">MODO DE JOGO</label>
+          <div class="config-jogo-opcoes" id="opcao-modo">
+            <label class="opcao-btn modo-btn" data-value="mundo">
+              <input type="radio" name="modo" value="mundo" checked>
+              <span>🌍 MUNDO</span>
+            </label>
+            <label class="opcao-btn modo-btn" data-value="pontos-turisticos">
+              <input type="radio" name="modo" value="pontos-turisticos">
+              <span>🏛️ PONTOS TURÍSTICOS</span>
+            </label>
+            <label class="opcao-btn modo-btn" data-value="paises">
+              <input type="radio" name="modo" value="paises">
+              <span>🗺️ PAÍSES</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="pais-mosaico-container" class="hidden">
+          <label class="config-jogo-label" style="margin-top:0.5rem;">ESCOLHA UM PAÍS</label>
+          <div id="pais-mosaico"></div>
+        </div>
+
+        <div id="config-opcoes-extras">
+          <div class="config-jogo-opcao">
+            <label class="config-jogo-label">TEMPO POR ROUND</label>
+            <div class="config-jogo-opcoes" id="opcao-tempo">
+              <label class="opcao-btn" data-value="0">
+                <input type="radio" name="tempo" value="0" checked>
+                <span>SEM TEMPO</span>
+              </label>
+              <label class="opcao-btn" data-value="120">
+                <input type="radio" name="tempo" value="120">
+                <span>2 MIN.</span>
+              </label>
+              <label class="opcao-btn" data-value="180">
+                <input type="radio" name="tempo" value="180">
+                <span>3 MIN.</span>
+              </label>
+              <label class="opcao-btn" data-value="300">
+                <input type="radio" name="tempo" value="300">
+                <span>5 MIN.</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="config-jogo-opcao">
+            <label class="config-jogo-label">DAR UM ROLEZINHO?</label>
+            <div class="config-jogo-opcoes" id="opcao-rolezinho">
+              <label class="opcao-btn" data-value="sim">
+                <input type="radio" name="rolezinho" value="sim" checked>
+                <span>SIM</span>
+              </label>
+              <label class="opcao-btn" data-value="nao">
+                <input type="radio" name="rolezinho" value="nao">
+                <span>NÃO</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <button id="btn-iniciar-jogo" class="btn-primary" style="width:100%;margin-top:0.5rem;">ENTRAR NO JOGO</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="js/paises.js"></script>
+  <script src="js/hero-bg.js"></script>
+  <script>
+    var paisSelecionado = null;
+
+    function montarMosaico() {
+      var container = document.getElementById('pais-mosaico');
+      container.innerHTML = '';
+      PAISES.forEach(function(pais) {
+        var card = document.createElement('div');
+        card.className = 'pais-card';
+        card.dataset.codigo = pais.codigo;
+
+        var img = document.createElement('img');
+        img.className = 'pais-card-img';
+        img.src = pais.bandeira;
+        img.alt = pais.nome;
+        img.loading = 'lazy';
+        img.onerror = function() { this.style.display = 'none'; };
+
+        var info = document.createElement('div');
+        info.className = 'pais-card-info';
+
+        var nome = document.createElement('span');
+        nome.className = 'pais-card-nome';
+        nome.textContent = pais.nome;
+
+        var atracoesArr = pais.atracoes || [];
+        var primAtracao = atracoesArr.length > 0 ? atracoesArr[0].nome : '';
+        var totalAtracoes = atracoesArr.length > 1 ? ' +' + (atracoesArr.length - 1) : '';
+        var atracao = document.createElement('span');
+        atracao.className = 'pais-card-atracao';
+        atracao.textContent = primAtracao + totalAtracoes;
+
+        info.appendChild(nome);
+        info.appendChild(atracao);
+        card.appendChild(img);
+        card.appendChild(info);
+
+        card.addEventListener('click', function() {
+          document.querySelectorAll('.pais-card').forEach(function(c) { c.classList.remove('selected'); });
+          card.classList.add('selected');
+          paisSelecionado = pais;
+        });
+
+        container.appendChild(card);
+      });
+    }
+
+    document.querySelectorAll('input[name="modo"]').forEach(function(radio) {
+      radio.addEventListener('change', function() {
+        var isPaises = this.value === 'paises';
+        document.getElementById('pais-mosaico-container').classList.toggle('hidden', !isPaises);
+        if (!isPaises) {
+          paisSelecionado = null;
+          document.querySelectorAll('.pais-card').forEach(function(c) { c.classList.remove('selected'); });
+        }
+      });
+    });
+
+    document.getElementById('btn-iniciar-jogo').addEventListener('click', function() {
+      var modo = document.querySelector('input[name="modo"]:checked');
+      var tempo = document.querySelector('input[name="tempo"]:checked');
+      var rolezinho = document.querySelector('input[name="rolezinho"]:checked');
+      var config = {
+        tempo: parseInt(tempo ? tempo.value : 0),
+        rolezinho: rolezinho ? rolezinho.value === 'sim' : true,
+        modo: modo ? modo.value : 'mundo',
+      };
+      if (config.modo === 'paises') {
+        if (!paisSelecionado) {
+          alert('Selecione um país para jogar!');
+          return;
+        }
+        config.paisCodigo = paisSelecionado.codigo;
+        config.paisNome = paisSelecionado.nome;
+      }
+      sessionStorage.setItem('where-config', JSON.stringify(config));
+      window.location.href = '/game?start=1';
+    });
+
+    montarMosaico();
+  </script>
+</body>
+</html>

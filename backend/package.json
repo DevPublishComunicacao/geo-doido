@@ -1,0 +1,22 @@
+{
+  "name": "where-backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.11.1",
+    "crypto": "^1.0.1",
+    "dotenv": "^17.4.2",
+    "express": "^4.18.2",
+    "express-session": "^1.19.0",
+    "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^9.0.3",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "pg": "^8.22.0"
+  }
+}

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Where? - Entrar</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="auth-page">
+  <div id="app">
+    <div id="hero-streetview"></div>
+    <div id="hero-overlay"></div>
+
+    <div class="auth-container">
+      <a href="/" class="auth-back-link">← Voltar</a>
+      <a href="/" class="auth-logo"><img src="images/logo.png" alt="Where?" class="logo-img-auth"></a>
+
+      <div id="auth-global-error" class="auth-error hidden"></div>
+      <div id="auth-global-success" class="auth-success hidden"></div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">Entrar</button>
+        <button class="auth-tab" data-tab="register">Cadastrar</button>
+      </div>
+
+      <form id="form-login" class="auth-form" action="/api/auth/login-form" method="POST">
+        <div class="auth-error hidden" id="login-erro"></div>
+
+        <label class="auth-label">Email</label>
+        <input type="email" name="email" id="login-email" class="auth-input" placeholder="seu@email.com" required>
+
+        <label class="auth-label">Senha</label>
+        <div class="password-wrapper">
+          <input type="password" name="senha" id="login-senha" class="auth-input" placeholder="Sua senha" required>
+          <button type="button" class="toggle-senha" onclick="toggleSenha('login-senha', this)" tabindex="-1" aria-label="Mostrar senha">
+            <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-closed hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+
+        <label class="remember-label">
+          <input type="checkbox" id="login-lembrar" checked>
+          <span>Salvar login</span>
+        </label>
+
+        <button type="submit" class="btn-primary auth-submit">Entrar</button>
+
+        <div class="auth-divider"><span>ou</span></div>
+
+        <a href="/api/auth/google" class="btn-google">Entrar com Google</a>
+
+        <a href="/forgot-password.html" class="auth-link">Esqueceu a senha?</a>
+      </form>
+
+      <form id="form-register" class="auth-form hidden" action="/api/auth/register-form" method="POST">
+        <div class="auth-error hidden" id="register-erro"></div>
+
+        <label class="auth-label">Nome</label>
+        <input type="text" name="nome" id="register-nome" class="auth-input" placeholder="Seu nome" required>
+
+        <label class="auth-label">Email</label>
+        <input type="email" name="email" id="register-email" class="auth-input" placeholder="seu@email.com" required>
+
+        <label class="auth-label">Senha (mín. 6 caracteres)</label>
+        <div class="password-wrapper">
+          <input type="password" name="senha" id="register-senha" class="auth-input" placeholder="Crie uma senha" required minlength="6">
+          <button type="button" class="toggle-senha" onclick="toggleSenha('register-senha', this)" tabindex="-1" aria-label="Mostrar senha">
+            <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-closed hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+
+        <label class="auth-label">Redigite a senha</label>
+        <div class="password-wrapper">
+          <input type="password" id="register-senha2" class="auth-input" placeholder="Repita a senha" required minlength="6">
+          <button type="button" class="toggle-senha" onclick="toggleSenha('register-senha2', this)" tabindex="-1" aria-label="Mostrar senha">
+            <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-closed hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+
+        <button type="submit" class="btn-primary auth-submit">Cadastrar</button>
+
+        <div class="auth-divider"><span>ou</span></div>
+
+        <a href="/api/auth/google" class="btn-google">Cadastrar com Google</a>
+      </form>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="js/hero-bg.js"></script>
+  <script>
+    function toggleSenha(id, btn) {
+      var input = document.getElementById(id);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.querySelector('.eye-open').classList.add('hidden');
+        btn.querySelector('.eye-closed').classList.remove('hidden');
+      } else {
+        input.type = 'password';
+        btn.querySelector('.eye-closed').classList.add('hidden');
+        btn.querySelector('.eye-open').classList.remove('hidden');
+      }
+    }
+
+    function $(id) { return document.getElementById(id); }
+
+    function mostrarErro(msg) {
+      var el = $('auth-global-error');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+
+    // Tabs
+    document.querySelectorAll('.auth-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.auth-tab').forEach(function(t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        var isLogin = tab.dataset.tab === 'login';
+        $('form-login').classList.toggle('hidden', !isLogin);
+        $('form-register').classList.toggle('hidden', isLogin);
+        $('auth-global-error').classList.add('hidden');
+      });
+    });
+
+    // Processa token/erro da URL
+    var params = new URLSearchParams(window.location.search);
+    var token = params.get('token');
+    if (token) {
+      var nome = params.get('nome') || 'Usuário';
+      var redirect = params.get('r') || '';
+      localStorage.setItem('where-token', token);
+      localStorage.setItem('where-usuario', JSON.stringify({ nome: nome }));
+      window.location.href = redirect || '/';
+    }
+
+    var erro = params.get('erro');
+    if (erro) {
+      var msgs = {
+        'login_invalid': 'Email ou senha inválidos.',
+        'login_empty': 'Preencha email e senha.',
+        'login_error': 'Erro no servidor. Tente novamente.',
+        'register_empty': 'Preencha todos os campos.',
+        'register_password_short': 'Senha deve ter no mínimo 6 caracteres.',
+        'register_exists': 'Este email já está cadastrado.',
+        'register_error': 'Erro no servidor. Tente novamente.',
+        'google': 'Erro ao fazer login com Google.',
+        'google_not_configured': 'Login com Google não configurado.',
+        'google_no_code': 'Código de autorização não recebido.',
+        'google_invalid_state': 'Estado inválido. Tente novamente.',
+        'google_token': 'Erro ao obter token do Google.',
+        'google_userinfo': 'Erro ao obter perfil do Google.',
+        'google_interno': 'Erro interno na autenticação Google.',
+      };
+      var detalhe = params.get('d');
+      mostrarErro((msgs[erro] || 'Erro desconhecido.') + (detalhe ? ' (' + detalhe + ')' : ''));
+    }
+
+    if (window.location.hash === '#register') {
+      var tabs = document.querySelectorAll('.auth-tab');
+      if (tabs.length >= 2) tabs[1].click();
+    }
+
+    // Validar senhas iguais no cadastro
+    document.getElementById('form-register').addEventListener('submit', function(e) {
+      var senha = document.getElementById('register-senha').value;
+      var senha2 = document.getElementById('register-senha2').value;
+      if (senha !== senha2) {
+        e.preventDefault();
+        mostrarErro('As senhas não conferem.');
+      }
+    });
+  </script>
+</body>
+</html>

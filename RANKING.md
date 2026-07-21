@@ -1,4 +1,4 @@
-# Sistema de Ranking - GeoDoido
+# Sistema de Ranking - Where?
 
 O ranking é calculado com base nas **partidas dos últimos 30 dias**.
 

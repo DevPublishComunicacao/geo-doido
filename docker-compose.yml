@@ -1,11 +1,11 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: geo-doido-db
+    container_name: where-db
     environment:
-      POSTGRES_DB: geodoido
-      POSTGRES_USER: geodoido
-      POSTGRES_PASSWORD: geodoido123
+      POSTGRES_DB: where
+      POSTGRES_USER: where
+      POSTGRES_PASSWORD: where123
     ports:
       - "5432:5432"
     volumes:

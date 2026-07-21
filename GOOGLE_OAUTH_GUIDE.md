@@ -13,7 +13,7 @@
 1. Em **APIs e Serviços** > **Tela de consentimento OAuth**
 2. Escolha **Externo** (ou interno se for só para sua organização)
 3. Preencha:
-   - **Nome do aplicativo**: GeoDoido
+   - **Nome do aplicativo**: Where?
    - **Domínios autorizados**: localhost
    - **Escopos**: email, profile, openid
 4. Adicione **usuários de teste** (seu email)
