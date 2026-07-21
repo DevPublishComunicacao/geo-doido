@@ -12,10 +12,35 @@ function getUsuario() {
   try { return JSON.parse(localStorage.getItem('where-usuario') || '{}'); } catch(e) { return {}; }
 }
 
-function conectarMultiplayer() {
+var mpAcaoPendente = null;
+var mpDadosPendentes = null;
+
+function conectarMultiplayer(acao, dados) {
+  if (mpSocket) { mpSocket.disconnect(); mpSocket = null; }
+  mpAcaoPendente = acao;
+  mpDadosPendentes = dados || {};
   mpSocket = io({ transports: ['websocket', 'polling'] });
+
   mpSocket.on('connect', function() {
     console.log('Socket conectado');
+    if (mpAcaoPendente === 'criar') {
+      var u = getUsuario();
+      mpSocket.emit('create_room', { nome: u.nome || 'Anônimo', avatar_url: u.avatar_url || '' });
+      mpAcaoPendente = null;
+    } else if (mpAcaoPendente === 'entrar') {
+      var u = getUsuario();
+      mpSocket.emit('join_room', {
+        codigo: mpDadosPendentes.codigo,
+        nome: u.nome || 'Anônimo',
+        avatar_url: u.avatar_url || '',
+      });
+      mpAcaoPendente = null;
+    }
+  });
+
+  mpSocket.on('connect_error', function(err) {
+    console.error('Socket erro:', err);
+    alert('Erro ao conectar ao servidor: ' + err.message);
   });
 
   mpSocket.on('room_created', function(data) {
@@ -60,7 +85,6 @@ function conectarMultiplayer() {
     mpGuessConfirmed = false;
     mpWaitingGuesses = false;
     mpResultadosRodada = [];
-    mpSocket.guessData = { lat: data.lat, lng: data.lng };
 
     mostrarTelaJogoMulti();
     iniciarRodadaMulti({ lat: data.lat, lng: data.lng });
@@ -93,22 +117,7 @@ function conectarMultiplayer() {
 }
 
 function criarSala() {
-  if (mpSocket) mpSocket.disconnect();
-  conectarMultiplayer();
-  var usuario = getUsuario();
-  mpSocket.on('connect', function check() {
-    mpSocket.emit('create_room', {
-      nome: usuario.nome || 'Anônimo',
-      avatar_url: usuario.avatar_url || '',
-    });
-    mpSocket.off('connect', check);
-  });
-  if (mpSocket.connected) {
-    mpSocket.emit('create_room', {
-      nome: usuario.nome || 'Anônimo',
-      avatar_url: usuario.avatar_url || '',
-    });
-  }
+  conectarMultiplayer('criar');
 }
 
 function entrarSala() {
@@ -117,24 +126,7 @@ function entrarSala() {
     alert('Digite um código de 4 caracteres.');
     return;
   }
-  if (mpSocket) mpSocket.disconnect();
-  conectarMultiplayer();
-  var usuario = getUsuario();
-  mpSocket.on('connect', function check() {
-    mpSocket.emit('join_room', {
-      codigo: codigo,
-      nome: usuario.nome || 'Anônimo',
-      avatar_url: usuario.avatar_url || '',
-    });
-    mpSocket.off('connect', check);
-  });
-  if (mpSocket.connected) {
-    mpSocket.emit('join_room', {
-      codigo: codigo,
-      nome: usuario.nome || 'Anônimo',
-      avatar_url: usuario.avatar_url || '',
-    });
-  }
+  conectarMultiplayer('entrar', { codigo: codigo });
 }
 
 function toggleReady() {
