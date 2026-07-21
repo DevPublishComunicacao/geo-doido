@@ -1,12 +1,19 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
 const express = require('express');
 const path = require('path');
+const http = require('http');
+const { Server } = require('socket.io');
 const session = require('express-session');
 const passport = require('passport');
 const { router: authRouter } = require('./auth');
+const { setupMultiplayer } = require('./multiplayer');
 const db = require('./db');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: '*', methods: ['GET', 'POST'] },
+});
 app.set('trust proxy', true);
 const PORT = process.env.PORT || 3000;
 
@@ -52,13 +59,14 @@ app.get('*', (req, res) => {
 });
 
 // Inicializa banco e depois sobe servidor
+setupMultiplayer(io);
 db.init().then(() => {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`Where? rodando em http://localhost:${PORT}`);
   });
 }).catch(err => {
   console.error('Falha ao inicializar banco:', err.message);
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`Where? rodando (sem banco) em http://localhost:${PORT}`);
   });
 });

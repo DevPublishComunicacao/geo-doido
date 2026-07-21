@@ -598,6 +598,13 @@ function confirmarPalpite() {
     lng = pos.lng;
   }
 
+  // Multiplayer: enviar palpite para o servidor em vez de calcular localmente
+  if (typeof enviarPalpiteMulti === 'function' && !mpGuessConfirmed) {
+    $('btn-palpite').classList.add('hidden');
+    enviarPalpiteMulti(lat, lng);
+    return;
+  }
+
   const resultado = jogo.fazerPalpite(lat, lng);
   if (!resultado) return;
 
@@ -1041,6 +1048,10 @@ document.addEventListener('DOMContentLoaded', () => {
   carregarRanking();
 
   $('btn-jogar').addEventListener('click', tentarIniciarJogo);
+
+  $('btn-multiplayer').addEventListener('click', () => {
+    $('mp-panel').classList.remove('hidden');
+  });
 
   $('btn-instrucoes').addEventListener('click', () => {
     $('modal-instrucoes').classList.remove('hidden');

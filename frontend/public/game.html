@@ -55,6 +55,7 @@
         </div>
         <div class="menu-principal">
           <button id="btn-jogar" class="btn-primary">Jogar</button>
+          <button id="btn-multiplayer" class="btn-secondary">Multiplayer (até 5)</button>
           <button id="btn-instrucoes" class="btn-secondary">Como Jogar</button>
         </div>
         <div class="stats-globais">
@@ -93,6 +94,80 @@
           <div id="ranking-pais-selector" class="hidden">
             <select id="ranking-pais-select"></select>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Painel Multiplayer -->
+    <div id="mp-panel" class="hidden">
+      <div id="mp-overlay">
+        <div class="mp-box">
+          <h2>Multiplayer</h2>
+          <p class="mp-subtitle">Jogue com até 5 amigos em tempo real!</p>
+          <div class="mp-actions">
+            <button id="mp-btn-criar" class="btn-primary">Criar Sala</button>
+            <div class="mp-divider"><span>ou</span></div>
+            <div class="mp-join-row">
+              <input type="text" id="mp-codigo-input" class="auth-input" placeholder="Código da sala" maxlength="4" style="text-transform:uppercase;letter-spacing:4px;">
+              <button id="mp-btn-entrar" class="btn-primary" style="white-space:nowrap;">Entrar</button>
+            </div>
+          </div>
+          <button id="mp-btn-voltar" class="btn-secondary" style="margin-top:1rem;" onclick="document.getElementById('mp-panel').classList.add('hidden')">Voltar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lobby Multiplayer -->
+    <div id="mp-lobby" class="hidden">
+      <div id="mp-overlay">
+        <div class="mp-box mp-lobby-box">
+          <h2>Sala: <span class="mp-codigo-display"></span></h2>
+          <p class="mp-subtitle">Compartilhe o código com seus amigos!</p>
+          <div id="mp-player-list" class="mp-player-list"></div>
+          <div class="mp-lobby-actions">
+            <button id="mp-btn-ready" class="btn-primary">Pronto</button>
+            <div id="mp-host-controls" class="hidden">
+              <button id="mp-btn-start" class="btn-primary">Iniciar Partida</button>
+            </div>
+          </div>
+          <button id="mp-btn-sair-sala" class="btn-secondary" style="margin-top:1rem;">Sair da Sala</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aguardando início -->
+    <div id="mp-waiting" class="hidden">
+      <div id="mp-overlay">
+        <div class="mp-box">
+          <h2 id="mp-waiting-text">Aguardando...</h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- Placar ao vivo durante o jogo -->
+    <div id="multiplayer-bar" class="hidden">
+      <div id="mp-scoreboard"></div>
+      <div id="mp-guess-count" class="mp-guess-count"></div>
+    </div>
+
+    <!-- Resultado da rodada -->
+    <div id="mp-round-result" class="hidden">
+      <div id="mp-round-result-overlay">
+        <div class="mp-round-result-box">
+          <h3>Resultado da Rodada</h3>
+          <div class="mp-round-result-list"></div>
+          <button id="mp-btn-next-round" class="btn-primary mp-next-round-btn hidden">Próxima Rodada</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultado Final Multiplayer -->
+    <div id="multiplayer-resultado" class="hidden">
+      <div id="mp-overlay">
+        <div class="mp-box mp-final-box">
+          <h2>🏆 Resultado Final</h2>
+          <div class="mp-final-list"></div>
+          <button class="btn-primary" onclick="sairDaSala();document.getElementById('multiplayer-resultado').classList.add('hidden');mostrarTela('tela-inicial')">Voltar ao Menu</button>
         </div>
       </div>
     </div>
@@ -142,6 +217,9 @@
               <span class="rd-score" id="rd-score">⭐ 0 pts</span>
               <span class="rd-time hidden" id="rd-time">⏱ 0:00</span>
             </div>
+          </div>
+          <div id="mp-round-panel" class="hidden mp-round-panel">
+            <span id="mp-round-label" class="mp-round-label"></span>
           </div>
           <span class="fs-divider"></span>
           <div class="header-actions">
@@ -271,11 +349,13 @@
     }, 500);
   </script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   <script src="config.js"></script>
   <script src="js/paises.js"></script>
   <script src="js/game.js"></script>
   <script src="js/app.js"></script>
   <script src="js/auth-ui.js"></script>
   <script src="js/hero-bg.js"></script>
+  <script src="js/multiplayer-client.js"></script>
 </body>
 </html>

@@ -2444,3 +2444,324 @@ body.game-page::after {
   color: #00d2ff;
   font-weight: 400;
 }
+
+/* === MULTIPLAYER === */
+#mp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 20, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.mp-box {
+  background: #1a1a2e;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+}
+
+.mp-box h2 {
+  color: #fff;
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.mp-subtitle {
+  color: #888;
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.mp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mp-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #555;
+  font-size: 0.8rem;
+}
+
+.mp-divider::before, .mp-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+}
+
+.mp-join-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.mp-join-row .auth-input {
+  flex: 1;
+}
+
+.mp-player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.mp-player-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+}
+
+.mp-player-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.mp-player-avatar-initials {
+  background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.mp-player-nome {
+  flex: 1;
+  color: #ddd;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.mp-voce-tag {
+  color: #00d2ff;
+  font-size: 0.75rem;
+}
+
+.mp-ready-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #00a86b;
+  color: #fff;
+}
+
+.mp-not-ready {
+  background: rgba(255,255,255,0.1);
+  color: #888;
+}
+
+.mp-lobby-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.mp-codigo-display {
+  color: #00d2ff;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 6px;
+}
+
+/* In-game scoreboard */
+#multiplayer-bar {
+  position: fixed;
+  top: 60px;
+  right: 12px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: none;
+}
+
+#mp-scoreboard {
+  background: rgba(15, 15, 26, 0.85);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 0.5rem;
+  min-width: 160px;
+  backdrop-filter: blur(6px);
+}
+
+.mp-score-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 3px 6px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+
+.mp-score-destaque {
+  background: rgba(0, 210, 255, 0.12);
+  border: 1px solid rgba(0, 210, 255, 0.2);
+}
+
+.mp-score-pos {
+  color: #666;
+  font-weight: 600;
+  min-width: 20px;
+}
+
+.mp-score-top1 { color: #ffd700; }
+.mp-score-top2 { color: #c0c0c0; }
+.mp-score-top3 { color: #cd7f32; }
+
+.mp-score-nome {
+  flex: 1;
+  color: #ccc;
+}
+
+.mp-score-pts {
+  color: #fff;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.mp-guess-count {
+  font-size: 0.75rem;
+  color: #888;
+  text-align: right;
+  padding: 0 4px;
+}
+
+/* Round panel in header */
+.mp-round-panel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mp-round-label {
+  color: #00d2ff;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Round result overlay */
+#mp-round-result-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 20, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1500;
+}
+
+.mp-round-result-box {
+  background: #1a1a2e;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 480px;
+  width: 90%;
+  text-align: center;
+}
+
+.mp-round-result-box h3 {
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.mp-round-result-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.mp-round-result-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.mp-round-result-pos {
+  color: #666;
+  font-weight: 700;
+  min-width: 24px;
+}
+
+.mp-round-result-nome {
+  flex: 1;
+  color: #ddd;
+  text-align: left;
+}
+
+.mp-round-result-dist {
+  color: #aaa;
+  font-size: 0.78rem;
+}
+
+.mp-round-result-pts {
+  color: #00d2ff;
+  font-weight: 700;
+}
+
+.mp-next-round-btn {
+  margin-top: 0.5rem;
+}
+
+/* Final results */
+.mp-final-box {
+  max-width: 460px;
+}
+
+.mp-final-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.mp-final-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  font-size: 0.95rem;
+}
+
+.mp-final-pos {
+  font-size: 1.2rem;
+  min-width: 36px;
+  text-align: center;
+}
+
+.mp-final-nome {
+  flex: 1;
+  color: #ddd;
+  text-align: left;
+}
+
+.mp-final-pts {
+  color: #00d2ff;
+  font-weight: 700;
+  font-size: 1rem;
+}
