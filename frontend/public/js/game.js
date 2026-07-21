@@ -99,7 +99,7 @@ class JogoWhere {
         regiao = { nome: this.pais.nome, bounds: this.pais.bounds };
         nomeLocal = obterNomeLocal(coords.lat, coords.lng);
       } else {
-        const regioes = REGIOES_STREET_VIEW;
+        const regioes = typeof PAISES !== 'undefined' ? PAISES : REGIOES_STREET_VIEW;
         regiao = regioes[Math.floor(Math.random() * regioes.length)];
         coords = gerarCoordenadaAleatoria(regiao.bounds);
         nomeLocal = obterNomeLocal(coords.lat, coords.lng);
