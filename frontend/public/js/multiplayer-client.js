@@ -98,9 +98,21 @@ function conectarMultiplayer(acao, dados) {
     document.getElementById('mp-lobby').classList.add('hidden');
     document.getElementById('mp-waiting').classList.remove('hidden');
     document.getElementById('mp-waiting-text').textContent = 'Partida começando...';
+
+    // Fallback: se round_start não chegar em 10s, volta pro lobby
+    if (mpSocket._roundTimeout) clearTimeout(mpSocket._roundTimeout);
+    mpSocket._roundTimeout = setTimeout(function() {
+      var waiting = document.getElementById('mp-waiting');
+      if (waiting && !waiting.classList.contains('hidden')) {
+        alert('A partida não iniciou. Tente novamente.');
+        waiting.classList.add('hidden');
+        document.getElementById('mp-lobby').classList.remove('hidden');
+      }
+    }, 10000);
   });
 
   mpSocket.on('round_start', function(data) {
+    if (mpSocket._roundTimeout) { clearTimeout(mpSocket._roundTimeout); mpSocket._roundTimeout = null; }
     mpRound = data.round;
     mpTotalRounds = data.totalRounds;
     mpGuessConfirmed = false;

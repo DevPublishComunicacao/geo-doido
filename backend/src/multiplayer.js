@@ -196,9 +196,14 @@ function setupMultiplayer(io) {
         players: formatPlayers(sala.players),
       });
 
-      setTimeout(() => {
+    setTimeout(() => {
+      try {
+        console.log('enviarRodada chamado para sala ' + sala.codigo + ', round=' + sala.round + ', locations=' + sala.locations.length);
         enviarRodada(sala);
-      }, 2000);
+      } catch (err) {
+        console.error('Erro ao enviar rodada:', err);
+      }
+    }, 2000);
     });
 
     socket.on('submit_guess', (data) => {
