@@ -262,7 +262,23 @@ function setupMultiplayer(io) {
     });
 
     socket.on('leave_room', () => {
-      sairDaSala(socket);
+      if (salaAtual) {
+        const sala = salas.get(salaAtual);
+        if (sala) {
+          const idx = sala.players.findIndex(p => p.id === socket.id);
+          if (idx !== -1) sala.players.splice(idx, 1);
+          socket.leave(sala.codigo);
+          if (sala.players.length === 0) {
+            salas.delete(salaAtual);
+          } else {
+            if (sala.host === socket.id) sala.host = sala.players[0].id;
+            if (sala.state === 'lobby') {
+              io.to(sala.codigo).emit('players_update', { players: formatPlayers(sala.players), newHost: sala.host });
+            }
+          }
+        }
+        salaAtual = null;
+      }
     });
 
     socket.on('disconnect', () => {
@@ -270,23 +286,13 @@ function setupMultiplayer(io) {
         const sala = salas.get(salaAtual);
         if (sala) {
           const idx = sala.players.findIndex(p => p.id === socket.id);
-          if (idx !== -1) {
-            sala.players.splice(idx, 1);
-          }
-
+          if (idx !== -1) sala.players.splice(idx, 1);
           if (sala.players.length === 0) {
             salas.delete(salaAtual);
-            return;
+          } else {
+            if (sala.host === socket.id) sala.host = sala.players[0].id;
+            io.to(sala.codigo).emit('players_update', { players: formatPlayers(sala.players), newHost: sala.host });
           }
-
-          if (sala.host === socket.id && sala.players.length > 0) {
-            sala.host = sala.players[0].id;
-          }
-
-          io.to(sala.codigo).emit('players_update', {
-            players: formatPlayers(sala.players),
-            newHost: sala.host,
-          });
         }
       }
     });
@@ -340,35 +346,6 @@ function finalizarJogo(sala) {
 
   io.to(sala.codigo).emit('game_end', { ranking });
   salas.delete(sala.codigo);
-}
-
-function sairDaSala(socket) {
-  if (!salaAtual) return;
-  const sala = salas.get(salaAtual);
-  if (!sala) return;
-
-  const idx = sala.players.findIndex(p => p.id === socket.id);
-  if (idx !== -1) sala.players.splice(idx, 1);
-
-  socket.leave(sala.codigo);
-
-  if (sala.players.length === 0) {
-    salas.delete(sala.codigo);
-    return;
-  }
-
-  if (sala.host === socket.id && sala.players.length > 0) {
-    sala.host = sala.players[0].id;
-  }
-
-  if (sala.state === 'lobby') {
-    io.to(sala.codigo).emit('players_update', {
-      players: formatPlayers(sala.players),
-      newHost: sala.host,
-    });
-  }
-
-  salaAtual = null;
 }
 
 function formatPlayers(players) {

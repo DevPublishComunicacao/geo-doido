@@ -1,3 +1,4 @@
+console.log('multiplayer-client loaded, typeof io:', typeof io);
 var mpSocket = null;
 var mpSala = null;
 var mpHost = false;
@@ -16,13 +17,28 @@ var mpAcaoPendente = null;
 var mpDadosPendentes = null;
 
 function conectarMultiplayer(acao, dados) {
+  console.log('conectarMultiplayer called, acao=' + acao + ', typeof io=' + typeof io);
+  if (typeof io === 'undefined') {
+    alert('Erro: Socket.IO não carregou. Verifique sua conexão de internet.');
+    return;
+  }
   if (mpSocket) { mpSocket.disconnect(); mpSocket = null; }
   mpAcaoPendente = acao;
   mpDadosPendentes = dados || {};
-  mpSocket = io({ transports: ['polling', 'websocket'], timeout: 10000 });
+
+  // Mostra feedback visual
+  var btnCriar = document.getElementById('mp-btn-criar');
+  var btnEntrar = document.getElementById('mp-btn-entrar');
+  if (btnCriar) btnCriar.disabled = true;
+  if (btnEntrar) btnEntrar.disabled = true;
+
+  mpSocket = io({ transports: ['polling', 'websocket'], timeout: 15000 });
 
   mpSocket.on('connect', function() {
-    console.log('Socket conectado');
+    console.log('Socket conectado, id=' + mpSocket.id);
+    if (btnCriar) btnCriar.disabled = false;
+    if (btnEntrar) btnEntrar.disabled = false;
+
     if (mpAcaoPendente === 'criar') {
       var u = getUsuario();
       mpSocket.emit('create_room', { nome: u.nome || 'Anônimo', avatar_url: u.avatar_url || '' });
@@ -39,10 +55,12 @@ function conectarMultiplayer(acao, dados) {
   });
 
   mpSocket.on('connect_error', function(err) {
-    console.warn('Socket transport error (normal fallback):', err.message);
+    console.warn('Socket connect_error:', err.message, err.type);
   });
 
   mpSocket.on('connect_timeout', function() {
+    if (btnCriar) btnCriar.disabled = false;
+    if (btnEntrar) btnEntrar.disabled = false;
     alert('Tempo limite excedido ao conectar ao servidor. Verifique sua conexão e tente novamente.');
   });
 
@@ -120,10 +138,12 @@ function conectarMultiplayer(acao, dados) {
 }
 
 function criarSala() {
+  console.log('criarSala() called');
   conectarMultiplayer('criar');
 }
 
 function entrarSala() {
+  console.log('entrarSala() called');
   var codigo = document.getElementById('mp-codigo-input').value.trim().toUpperCase();
   if (!codigo || codigo.length !== 4) {
     alert('Digite um código de 4 caracteres.');
