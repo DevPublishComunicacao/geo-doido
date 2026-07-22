@@ -123,7 +123,13 @@ class JogoWhere {
           if (diversos.length > 0) candidatos = diversos;
         }
         regiao = candidatos[Math.floor(Math.random() * candidatos.length)];
-        coords = gerarCoordenadaAleatoria(regiao.bounds);
+        const atrs = regiao.atracoes || [];
+        if (atrs.length > 0) {
+          const atr = atrs[Math.floor(Math.random() * atrs.length)];
+          coords = { lat: atr.lat, lng: atr.lng };
+        } else {
+          coords = gerarCoordenadaAleatoria(regiao.bounds);
+        }
         nomeLocal = regiao.nome;
       }
       
@@ -184,7 +190,13 @@ class JogoWhere {
           if (diversos.length > 0) candidatos = diversos;
         }
         regiao = candidatos[Math.floor(Math.random() * candidatos.length)];
-        coords = gerarCoordenadaAleatoria(regiao.bounds);
+        const atrs = regiao.atracoes || [];
+        if (atrs.length > 0) {
+          const atr = atrs[Math.floor(Math.random() * atrs.length)];
+          coords = { lat: atr.lat, lng: atr.lng };
+        } else {
+          coords = gerarCoordenadaAleatoria(regiao.bounds);
+        }
         nomeLocal = regiao.nome;
       }
       
