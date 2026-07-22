@@ -166,37 +166,30 @@ class JogoWhere {
     
     // Tenta obter nome da cidade (modo país)
     if (this.pais) {
-      await Promise.all(locais.map(async local => {
-        const cidade = await this.reverseGeocode(local.lat, local.lng);
+      const cidades = await Promise.all(locais.map((local, i) =>
+        new Promise(r => setTimeout(r, i * 200)).then(() => this.reverseGeocode(local.lat, local.lng))
+      ));
+      cidades.forEach((cidade, i) => {
         if (cidade) {
-          local.nome = `${cidade}`;
-          local.desc = `${cidade}, ${this.pais.nome}`;
+          locais[i].nome = cidade;
+          locais[i].desc = `${cidade}, ${this.pais.nome}`;
         }
-      }));
+      });
     }
     
     return locais;
   }
 
-  reverseGeocode(lat, lng) {
-    if (typeof google === 'undefined' || !google.maps || !google.maps.Geocoder) {
-      return Promise.resolve(null);
-    }
-    return new Promise(resolve => {
-      new google.maps.Geocoder().geocode({ location: { lat, lng } }, (results, status) => {
-        if (status === 'OK' && results && results[0]) {
-          for (const comp of results[0].address_components) {
-            if (comp.types.includes('locality') || comp.types.includes('administrative_area_level_2')) {
-              resolve(comp.long_name);
-              return;
-            }
-          }
-          resolve(results[0].formatted_address.split(',')[0]);
-        } else {
-          resolve(null);
-        }
-      });
-    });
+  async reverseGeocode(lat, lng) {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=pt`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data && data.address) {
+        return data.address.city || data.address.town || data.address.village || data.address.municipality || data.address.county || null;
+      }
+    } catch (e) {}
+    return null;
   }
 
   verificarCoberturaStreetView(lat, lng) {
