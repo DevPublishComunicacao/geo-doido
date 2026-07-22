@@ -56,6 +56,8 @@ class JogoWhere {
     this.palpites = [];
     this.pais = pais || null;
     this.modo = modo || 'mundo';
+    this.streetViewService = (typeof google !== 'undefined' && google.maps && google.maps.StreetViewService)
+      ? new google.maps.StreetViewService() : null;
     this.locaisRodada = await this.gerarLocaisAleatorios(this.totalRodadas);
     this.estado = 'jogando';
     return this.getRodadaAtual();
@@ -64,7 +66,7 @@ class JogoWhere {
   async gerarLocaisAleatorios(quantidade) {
     const locais = [];
     const paisesUsados = this.pais ? null : new Set();
-    const tentativasMax = quantidade * 50;
+    const tentativasMax = quantidade * 15;
     let tentativas = 0;
     const pendentes = [];
     
@@ -115,7 +117,7 @@ class JogoWhere {
         })
       );
       
-      if (pendentes.length >= 10 || tentativas >= tentativasMax) {
+      if (pendentes.length >= 5 || tentativas >= tentativasMax) {
         await Promise.all(pendentes.splice(0));
       }
     }
@@ -132,7 +134,17 @@ class JogoWhere {
   }
 
   verificarCoberturaStreetView(lat, lng) {
-    return Promise.resolve(true);
+    if (!this.streetViewService) return Promise.resolve(true);
+    const timeout = new Promise(r => setTimeout(() => r(false), 3000));
+    const check = new Promise(resolve => {
+      this.streetViewService.getPanorama({
+        location: { lat, lng }, radius: 100,
+        source: google.maps.StreetViewSource.OUTDOOR
+      }, (data, status) => {
+        resolve(status === google.maps.StreetViewStatus.OK && data && data.location);
+      });
+    });
+    return Promise.race([check, timeout]);
   }
 
   getRodadaAtual() {
