@@ -73,6 +73,7 @@ class JogoWhere {
 
   async gerarLocaisAleatorios(quantidade) {
     const locais = [];
+    const paisesUsados = new Set();
     const tentativasMax = quantidade * 20;
     let tentativas = 0;
     const pendentes = [];
@@ -107,11 +108,12 @@ class JogoWhere {
       
       pendentes.push(
         this.verificarCoberturaStreetView(coords.lat, coords.lng).then(tem => {
-          if (tem) {
+          if (tem && !paisesUsados.has(regiao.nome)) {
             const jaExiste = locais.some(l => 
               this.calcularDistancia(l.lat, l.lng, coords.lat, coords.lng) < 5
             );
             if (!jaExiste) {
+              paisesUsados.add(regiao.nome);
               locais.push({
                 lat: coords.lat,
                 lng: coords.lng,
