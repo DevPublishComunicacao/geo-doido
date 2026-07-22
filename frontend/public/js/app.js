@@ -712,7 +712,7 @@ function mostrarResultado() {
     div.className = 'rodada-item';
     const distLabel = jogo.getDistanciaLabel(r.distancia);
     div.innerHTML = `
-      <span class="rodada-num">Rodada ${i + 1}: ${r.local.nome.split(',')[0]}</span>
+      <span class="rodada-num">Rodada ${i + 1}: ${r.local.nome}</span>
       <span class="rodada-distancia">${distLabel}</span>
       <span class="rodada-pontos">${r.pontos} pts</span>
     `;
