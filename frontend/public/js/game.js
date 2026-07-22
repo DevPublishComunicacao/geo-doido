@@ -48,7 +48,6 @@ class JogoWhere {
     this.locaisRodada = [];
     this.palpites = [];
     this.estado = 'menu';
-    this.streetViewService = null;
   }
 
   async iniciarJogo(pais, modo) {
@@ -57,11 +56,6 @@ class JogoWhere {
     this.palpites = [];
     this.pais = pais || null;
     this.modo = modo || 'mundo';
-    
-    if (typeof google !== 'undefined' && google.maps && google.maps.StreetViewService) {
-      this.streetViewService = new google.maps.StreetViewService();
-    }
-    
     this.locaisRodada = await this.gerarLocaisAleatorios(this.totalRodadas);
     this.estado = 'jogando';
     return this.getRodadaAtual();
@@ -138,20 +132,7 @@ class JogoWhere {
   }
 
   verificarCoberturaStreetView(lat, lng) {
-    return new Promise((resolve) => {
-      if (!this.streetViewService) {
-        resolve(true);
-        return;
-      }
-      
-      this.streetViewService.getPanorama({
-        location: { lat, lng },
-        radius: 100,
-        source: google.maps.StreetViewSource.OUTDOOR
-      }, (data, status) => {
-        resolve(status === google.maps.StreetViewStatus.OK && data && data.location);
-      });
-    });
+    return Promise.resolve(true);
   }
 
   getRodadaAtual() {
