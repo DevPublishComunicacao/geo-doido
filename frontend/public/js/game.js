@@ -123,13 +123,7 @@ class JogoWhere {
           if (diversos.length > 0) candidatos = diversos;
         }
         regiao = candidatos[Math.floor(Math.random() * candidatos.length)];
-        const atrs = regiao.atracoes || [];
-        if (atrs.length > 0) {
-          const atr = atrs[Math.floor(Math.random() * atrs.length)];
-          coords = { lat: atr.lat, lng: atr.lng };
-        } else {
-          coords = gerarCoordenadaAleatoria(regiao.bounds);
-        }
+        coords = gerarCoordenadaAleatoria(regiao.bounds);
         nomeLocal = regiao.nome;
       }
       
@@ -162,53 +156,91 @@ class JogoWhere {
       await Promise.all(pendentes);
     }
     
-    // Preenche rounds faltantes sem verificar Street View
+    // Preenche rounds faltantes tentando outras coordenadas/regioes
     while (locais.length < quantidade) {
-      let coords;
-      let regiao;
-      let nomeLocal;
+      let tentou = false;
+      for (let retry = 0; retry < 30 && !tentou; retry++) {
+        let coords;
+        let regiao;
+        let nomeLocal;
 
-      if (this.modo === 'pontos-turisticos') {
-        const idx = Math.floor(Math.random() * PAISES.length);
-        const pais = PAISES[idx];
-        const atracoes = pais.atracoes || [{ nome: pais.atracao || 'Desconhecido', lat: pais.lat, lng: pais.lng }];
-        const atracao = atracoes[Math.floor(Math.random() * atracoes.length)];
-        coords = { lat: atracao.lat, lng: atracao.lng };
-        regiao = { nome: pais.nome, bounds: pais.bounds };
-        nomeLocal = atracao.nome;
-      } else if (this.pais) {
-        const raio = Math.min(200, Math.max(30, (this.pais.bounds.latMax - this.pais.bounds.latMin) * 50));
-        const atr = this.pais.atracoes && this.pais.atracoes[0] ? this.pais.atracoes[0] : { lat: 0, lng: 0 };
-        coords = gerarCoordenadaProximidade({ lat: atr.lat, lng: atr.lng }, raio);
-        regiao = { nome: this.pais.nome, bounds: this.pais.bounds };
-        nomeLocal = this.pais.nome;
-      } else {
-        const regioes = typeof PAISES !== 'undefined' ? PAISES : REGIOES_STREET_VIEW;
-        let candidatos = regioes;
-        if (regioesUsadas.size > 0 && regioesUsadas.size < 7) {
-          const diversos = regioes.filter(p => !regioesUsadas.has(REGIAO_PAIS[p.codigo]));
-          if (diversos.length > 0) candidatos = diversos;
-        }
-        regiao = candidatos[Math.floor(Math.random() * candidatos.length)];
-        const atrs = regiao.atracoes || [];
-        if (atrs.length > 0) {
-          const atr = atrs[Math.floor(Math.random() * atrs.length)];
-          coords = { lat: atr.lat, lng: atr.lng };
+        if (this.modo === 'pontos-turisticos') {
+          const idx = Math.floor(Math.random() * PAISES.length);
+          const pais = PAISES[idx];
+          const atracoes = pais.atracoes || [{ nome: pais.atracao || 'Desconhecido', lat: pais.lat, lng: pais.lng }];
+          const atracao = atracoes[Math.floor(Math.random() * atracoes.length)];
+          coords = { lat: atracao.lat, lng: atracao.lng };
+          regiao = { nome: pais.nome, bounds: pais.bounds };
+          nomeLocal = atracao.nome;
+        } else if (this.pais) {
+          const raio = Math.min(200, Math.max(30, (this.pais.bounds.latMax - this.pais.bounds.latMin) * 50));
+          const atr = this.pais.atracoes && this.pais.atracoes[0] ? this.pais.atracoes[0] : { lat: 0, lng: 0 };
+          coords = gerarCoordenadaProximidade({ lat: atr.lat, lng: atr.lng }, raio);
+          regiao = { nome: this.pais.nome, bounds: this.pais.bounds };
+          nomeLocal = this.pais.nome;
         } else {
+          const regioes = typeof PAISES !== 'undefined' ? PAISES : REGIOES_STREET_VIEW;
+          let candidatos = regioes;
+          if (regioesUsadas.size > 0 && regioesUsadas.size < 7) {
+            const diversos = regioes.filter(p => !regioesUsadas.has(REGIAO_PAIS[p.codigo]));
+            if (diversos.length > 0) candidatos = diversos;
+          }
+          regiao = candidatos[Math.floor(Math.random() * candidatos.length)];
           coords = gerarCoordenadaAleatoria(regiao.bounds);
+          nomeLocal = regiao.nome;
         }
-        nomeLocal = regiao.nome;
+        
+        if (paisesUsados && paisesUsados.has(regiao.nome)) continue;
+        
+        const tem = this.pais ? true : await this.verificarCoberturaStreetView(coords.lat, coords.lng);
+        if (tem) {
+          if (paisesUsados) paisesUsados.add(regiao.nome);
+          regioesUsadas.add(REGIAO_PAIS[regiao.codigo]);
+          locais.push({
+            lat: coords.lat,
+            lng: coords.lng,
+            nome: nomeLocal,
+            desc: this.modo === 'pontos-turisticos' ? `${regiao.nome} - ${nomeLocal}` : nomeLocal
+          });
+          tentou = true;
+        }
       }
       
-      if (!paisesUsados || !paisesUsados.has(regiao.nome)) {
-        if (paisesUsados) paisesUsados.add(regiao.nome);
-        regioesUsadas.add(REGIAO_PAIS[regiao.codigo]);
-        locais.push({
-          lat: coords.lat,
-          lng: coords.lng,
-          nome: nomeLocal,
-          desc: this.modo === 'pontos-turisticos' ? `${regiao.nome} - ${nomeLocal}` : nomeLocal
-        });
+      // Se mesmo depois de 30 tentativas nao achou, adiciona sem verificar
+      if (!tentou) {
+        let coords;
+        let regiao;
+        let nomeLocal;
+
+        if (this.modo === 'pontos-turisticos') {
+          const idx = Math.floor(Math.random() * PAISES.length);
+          const pais = PAISES[idx];
+          const atracoes = pais.atracoes || [{ nome: pais.atracao || 'Desconhecido', lat: pais.lat, lng: pais.lng }];
+          const atracao = atracoes[Math.floor(Math.random() * atracoes.length)];
+          coords = { lat: atracao.lat, lng: atracao.lng };
+          regiao = { nome: pais.nome, bounds: pais.bounds };
+          nomeLocal = atracao.nome;
+        } else if (this.pais) {
+          const raio = Math.min(200, Math.max(30, (this.pais.bounds.latMax - this.pais.bounds.latMin) * 50));
+          const atr = this.pais.atracoes && this.pais.atracoes[0] ? this.pais.atracoes[0] : { lat: 0, lng: 0 };
+          coords = gerarCoordenadaProximidade({ lat: atr.lat, lng: atr.lng }, raio);
+          regiao = { nome: this.pais.nome, bounds: this.pais.bounds };
+          nomeLocal = this.pais.nome;
+        } else {
+          const regioes = typeof PAISES !== 'undefined' ? PAISES : REGIOES_STREET_VIEW;
+          regiao = regioes[Math.floor(Math.random() * regioes.length)];
+          coords = gerarCoordenadaAleatoria(regiao.bounds);
+          nomeLocal = regiao.nome;
+        }
+        if (!paisesUsados || !paisesUsados.has(regiao.nome)) {
+          if (paisesUsados) paisesUsados.add(regiao.nome);
+          locais.push({
+            lat: coords.lat,
+            lng: coords.lng,
+            nome: nomeLocal,
+            desc: this.modo === 'pontos-turisticos' ? `${regiao.nome} - ${nomeLocal}` : nomeLocal
+          });
+        }
       }
     }
     
@@ -244,7 +276,7 @@ class JogoWhere {
     if (!this.streetViewService) return Promise.resolve(true);
     return new Promise(resolve => {
       this.streetViewService.getPanorama({
-        location: { lat, lng }, radius: 100,
+        location: { lat, lng }, radius: 200,
         source: google.maps.StreetViewSource.OUTDOOR
       }, (data, status) => {
         resolve(status === google.maps.StreetViewStatus.OK && data && data.location);
