@@ -66,7 +66,7 @@ class JogoWhere {
   async gerarLocaisAleatorios(quantidade) {
     const locais = [];
     const paisesUsados = this.pais ? null : new Set();
-    const tentativasMax = quantidade * 15;
+    const tentativasMax = quantidade * 50;
     let tentativas = 0;
     const pendentes = [];
     
@@ -126,8 +126,42 @@ class JogoWhere {
       await Promise.all(pendentes);
     }
     
-    if (locais.length < quantidade) {
-      console.warn(`Só conseguiu gerar ${locais.length} de ${quantidade} locais com Street View`);
+    // Preenche rounds faltantes sem verificar Street View
+    while (locais.length < quantidade) {
+      let coords;
+      let regiao;
+      let nomeLocal;
+
+      if (this.modo === 'pontos-turisticos') {
+        const idx = Math.floor(Math.random() * PAISES.length);
+        const pais = PAISES[idx];
+        const atracoes = pais.atracoes || [{ nome: pais.atracao || 'Desconhecido', lat: pais.lat, lng: pais.lng }];
+        const atracao = atracoes[Math.floor(Math.random() * atracoes.length)];
+        coords = { lat: atracao.lat, lng: atracao.lng };
+        regiao = { nome: pais.nome, bounds: pais.bounds };
+        nomeLocal = atracao.nome;
+      } else if (this.pais) {
+        const raio = Math.min(200, Math.max(30, (this.pais.bounds.latMax - this.pais.bounds.latMin) * 50));
+        const atr = this.pais.atracoes && this.pais.atracoes[0] ? this.pais.atracoes[0] : { lat: 0, lng: 0 };
+        coords = gerarCoordenadaProximidade({ lat: atr.lat, lng: atr.lng }, raio);
+        regiao = { nome: this.pais.nome, bounds: this.pais.bounds };
+        nomeLocal = this.pais.nome;
+      } else {
+        const regioes = typeof PAISES !== 'undefined' ? PAISES : REGIOES_STREET_VIEW;
+        regiao = regioes[Math.floor(Math.random() * regioes.length)];
+        coords = gerarCoordenadaAleatoria(regiao.bounds);
+        nomeLocal = regiao.nome;
+      }
+      
+      if (!paisesUsados || !paisesUsados.has(regiao.nome)) {
+        if (paisesUsados) paisesUsados.add(regiao.nome);
+        locais.push({
+          lat: coords.lat,
+          lng: coords.lng,
+          nome: nomeLocal,
+          desc: this.modo === 'pontos-turisticos' ? `${regiao.nome} - ${nomeLocal}` : nomeLocal
+        });
+      }
     }
     
     return locais;
@@ -135,8 +169,7 @@ class JogoWhere {
 
   verificarCoberturaStreetView(lat, lng) {
     if (!this.streetViewService) return Promise.resolve(true);
-    const timeout = new Promise(r => setTimeout(() => r(false), 3000));
-    const check = new Promise(resolve => {
+    return new Promise(resolve => {
       this.streetViewService.getPanorama({
         location: { lat, lng }, radius: 100,
         source: google.maps.StreetViewSource.OUTDOOR
@@ -144,7 +177,6 @@ class JogoWhere {
         resolve(status === google.maps.StreetViewStatus.OK && data && data.location);
       });
     });
-    return Promise.race([check, timeout]);
   }
 
   getRodadaAtual() {
