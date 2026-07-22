@@ -40,31 +40,6 @@ function gerarCoordenadaProximidade(centro, raioKm) {
   return { lat, lng };
 }
 
-let _cacheLocal = {};
-let _ultimaGeocode = 0;
-function obterNomeLocal(lat, lng) {
-  const chave = `${lat.toFixed(4)},${lng.toFixed(4)}`;
-  if (_cacheLocal[chave]) return Promise.resolve(_cacheLocal[chave]);
-  const delay = Math.max(0, 1100 - (Date.now() - _ultimaGeocode));
-  return new Promise(resolve => setTimeout(resolve, delay))
-    .then(() => {
-      _ultimaGeocode = Date.now();
-      return fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=pt`);
-    })
-    .then(r => r.ok ? r.json() : null)
-    .then(data => {
-      if (data && data.display_name) {
-        const parts = data.display_name.split(', ');
-        const nome = parts.length > 1 ? parts.slice(0, -2).concat(parts[parts.length - 1]).join(', ') : data.display_name;
-        _cacheLocal[chave] = nome;
-      } else {
-        _cacheLocal[chave] = `Local desconhecido (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-      }
-      return _cacheLocal[chave];
-    })
-    .catch(() => `Local desconhecido (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
-}
-
 class JogoWhere {
   constructor() {
     this.pontuacao = 0;
@@ -104,6 +79,7 @@ class JogoWhere {
       
       let coords;
       let regiao;
+      let nomeLocal;
 
       if (this.modo === 'pontos-turisticos') {
         const idx = Math.floor(Math.random() * PAISES.length);
@@ -112,23 +88,22 @@ class JogoWhere {
         const atracao = atracoes[Math.floor(Math.random() * atracoes.length)];
         coords = { lat: atracao.lat, lng: atracao.lng };
         regiao = { nome: pais.nome, bounds: pais.bounds };
+        nomeLocal = atracao.nome;
       } else if (this.pais) {
         const raio = Math.min(200, Math.max(30, (this.pais.bounds.latMax - this.pais.bounds.latMin) * 50));
         const atr = this.pais.atracoes && this.pais.atracoes[0] ? this.pais.atracoes[0] : { lat: 0, lng: 0 };
         coords = gerarCoordenadaProximidade({ lat: atr.lat, lng: atr.lng }, raio);
         regiao = { nome: this.pais.nome, bounds: this.pais.bounds };
+        nomeLocal = this.pais.nome;
       } else {
         const regioes = typeof PAISES !== 'undefined' ? PAISES : REGIOES_STREET_VIEW;
         regiao = regioes[Math.floor(Math.random() * regioes.length)];
         coords = gerarCoordenadaAleatoria(regiao.bounds);
+        nomeLocal = regiao.nome;
       }
       
-      const nomePromise = this.modo === 'pontos-turisticos'
-        ? Promise.resolve(regiao.nome)
-        : obterNomeLocal(coords.lat, coords.lng);
-      
       pendentes.push(
-        Promise.all([this.verificarCoberturaStreetView(coords.lat, coords.lng), nomePromise]).then(([tem, nome]) => {
+        this.verificarCoberturaStreetView(coords.lat, coords.lng).then(tem => {
           if (tem && (!paisesUsados || !paisesUsados.has(regiao.nome))) {
             const jaExiste = locais.some(l => 
               this.calcularDistancia(l.lat, l.lng, coords.lat, coords.lng) < 5
@@ -138,8 +113,8 @@ class JogoWhere {
               locais.push({
                 lat: coords.lat,
                 lng: coords.lng,
-                nome,
-                desc: `${regiao.nome} - ${nome}`
+                nome: nomeLocal,
+                desc: this.modo === 'pontos-turisticos' ? `${regiao.nome} - ${nomeLocal}` : nomeLocal
               });
             }
           }
