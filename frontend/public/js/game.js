@@ -28,6 +28,29 @@ const REGIOES_STREET_VIEW = [
   { nome: 'Filipinas', bounds: { latMin: 4.5, latMax: 21, lngMin: 116.9, lngMax: 126.6 } },
 ];
 
+const REGIAO_PAIS = {
+  AR:'america-sul',BO:'america-sul',BR:'america-sul',CL:'america-sul',CO:'america-sul',
+  EC:'america-sul',PY:'america-sul',PE:'america-sul',UY:'america-sul',VE:'america-sul',
+  BS:'america-norte',CA:'america-norte',CR:'america-norte',CU:'america-norte',
+  DO:'america-norte',GT:'america-norte',JM:'america-norte',MX:'america-norte',
+  NI:'america-norte',PA:'america-norte',PR:'america-norte',SV:'america-norte',US:'america-norte',
+  AL:'europa',AM:'europa',AT:'europa',BA:'europa',BE:'europa',BG:'europa',BY:'europa',CH:'europa',
+  CZ:'europa',DE:'europa',DK:'europa',EE:'europa',ES:'europa',FI:'europa',FR:'europa',
+  GB:'europa',GR:'europa',HR:'europa',HU:'europa',IE:'europa',IS:'europa',IT:'europa',
+  LT:'europa',LU:'europa',LV:'europa',MC:'europa',MD:'europa',ME:'europa',MK:'europa',
+  MT:'europa',NL:'europa',NO:'europa',PL:'europa',PT:'europa',RO:'europa',RS:'europa',
+  SE:'europa',SI:'europa',SK:'europa',UA:'europa',
+  AO:'africa',BW:'africa',CM:'africa',CI:'africa',DZ:'africa',EG:'africa',ET:'africa',
+  GH:'africa',KE:'africa',MA:'africa',MG:'africa',MU:'africa',MZ:'africa',NA:'africa',
+  NG:'africa',SN:'africa',TN:'africa',TZ:'africa',ZA:'africa',
+  AE:'oriente-medio',IL:'oriente-medio',JO:'oriente-medio',LB:'oriente-medio',
+  QA:'oriente-medio',SA:'oriente-medio',TR:'oriente-medio',
+  BD:'asia',CN:'asia',HK:'asia',ID:'asia',IN:'asia',JP:'asia',KH:'asia',KR:'asia',
+  KZ:'asia',LA:'asia',LK:'asia',MM:'asia',MN:'asia',MO:'asia',MY:'asia',NP:'asia',
+  PH:'asia',RU:'asia',SG:'asia',TH:'asia',TW:'asia',UZ:'asia',VN:'asia',
+  AU:'oceania',  FJ:'oceania',GE:'europa',NZ:'oceania',
+};
+
 function gerarCoordenadaAleatoria(bounds) {
   const lat = bounds.latMin + Math.random() * (bounds.latMax - bounds.latMin);
   const lng = bounds.lngMin + Math.random() * (bounds.lngMax - bounds.lngMin);
@@ -66,6 +89,7 @@ class JogoWhere {
   async gerarLocaisAleatorios(quantidade) {
     const locais = [];
     const paisesUsados = this.pais ? null : new Set();
+    const regioesUsadas = new Set();
     const tentativasMax = quantidade * 50;
     let tentativas = 0;
     const pendentes = [];
@@ -93,7 +117,12 @@ class JogoWhere {
         nomeLocal = this.pais.nome;
       } else {
         const regioes = typeof PAISES !== 'undefined' ? PAISES : REGIOES_STREET_VIEW;
-        regiao = regioes[Math.floor(Math.random() * regioes.length)];
+        let candidatos = regioes;
+        if (regioesUsadas.size > 0 && regioesUsadas.size < 7) {
+          const diversos = regioes.filter(p => !regioesUsadas.has(REGIAO_PAIS[p.codigo]));
+          if (diversos.length > 0) candidatos = diversos;
+        }
+        regiao = candidatos[Math.floor(Math.random() * candidatos.length)];
         coords = gerarCoordenadaAleatoria(regiao.bounds);
         nomeLocal = regiao.nome;
       }
@@ -106,6 +135,7 @@ class JogoWhere {
             );
             if (!jaExiste) {
               if (paisesUsados) paisesUsados.add(regiao.nome);
+              regioesUsadas.add(REGIAO_PAIS[regiao.codigo]);
               locais.push({
                 lat: coords.lat,
                 lng: coords.lng,
@@ -148,13 +178,19 @@ class JogoWhere {
         nomeLocal = this.pais.nome;
       } else {
         const regioes = typeof PAISES !== 'undefined' ? PAISES : REGIOES_STREET_VIEW;
-        regiao = regioes[Math.floor(Math.random() * regioes.length)];
+        let candidatos = regioes;
+        if (regioesUsadas.size > 0 && regioesUsadas.size < 7) {
+          const diversos = regioes.filter(p => !regioesUsadas.has(REGIAO_PAIS[p.codigo]));
+          if (diversos.length > 0) candidatos = diversos;
+        }
+        regiao = candidatos[Math.floor(Math.random() * candidatos.length)];
         coords = gerarCoordenadaAleatoria(regiao.bounds);
         nomeLocal = regiao.nome;
       }
       
       if (!paisesUsados || !paisesUsados.has(regiao.nome)) {
         if (paisesUsados) paisesUsados.add(regiao.nome);
+        regioesUsadas.add(REGIAO_PAIS[regiao.codigo]);
         locais.push({
           lat: coords.lat,
           lng: coords.lng,
