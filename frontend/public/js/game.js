@@ -164,7 +164,39 @@ class JogoWhere {
       }
     }
     
+    // Tenta obter nome da cidade (modo país)
+    if (this.pais) {
+      await Promise.all(locais.map(async local => {
+        const cidade = await this.reverseGeocode(local.lat, local.lng);
+        if (cidade) {
+          local.nome = `${cidade}`;
+          local.desc = `${cidade}, ${this.pais.nome}`;
+        }
+      }));
+    }
+    
     return locais;
+  }
+
+  reverseGeocode(lat, lng) {
+    if (typeof google === 'undefined' || !google.maps || !google.maps.Geocoder) {
+      return Promise.resolve(null);
+    }
+    return new Promise(resolve => {
+      new google.maps.Geocoder().geocode({ location: { lat, lng } }, (results, status) => {
+        if (status === 'OK' && results && results[0]) {
+          for (const comp of results[0].address_components) {
+            if (comp.types.includes('locality') || comp.types.includes('administrative_area_level_2')) {
+              resolve(comp.long_name);
+              return;
+            }
+          }
+          resolve(results[0].formatted_address.split(',')[0]);
+        } else {
+          resolve(null);
+        }
+      });
+    });
   }
 
   verificarCoberturaStreetView(lat, lng) {
